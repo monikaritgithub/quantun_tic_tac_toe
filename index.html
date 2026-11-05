@@ -62,6 +62,23 @@
             Initialized 9 qubits in superposition |+⟩. Player O's turn.
         </div>
 
+        <!-- Fixed Step / Move Budget Tracker -->
+        <div class="step-tracker-container">
+            <div class="step-info">
+                <span class="step-label">
+                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                    <span>Turn Budget:</span>
+                </span>
+                <span id="step-counter-badge" class="step-badge">Step 0 / 9</span>
+                <span class="step-hint">Auto-collapses at Step 9</span>
+            </div>
+            <div class="step-progress-bar">
+                <div id="step-progress-fill" class="step-progress-fill" style="width: 0%"></div>
+            </div>
+        </div>
+
         <!-- Mobile Segmented Navigation Tabs (Shown on mobile & tablets) -->
         <div class="mobile-tabs-container">
             <div class="segmented-control">
@@ -132,14 +149,14 @@
                             <span class="hint">Exchange</span>
                         </button>
 
-                        <button id="measure-btn" class="action-btn btn-measure" title="Execute Projective Measurement">
+                        <button id="measure-btn" class="action-btn btn-measure" title="Execute Projective Measurement Immediately">
                             <div class="action-btn-title">
                                 <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M4 14a8 8 0 0 1 16 0"/><path d="M12 14l3.5-5"/><rect x="2" y="16" width="20" height="4" rx="2"/><circle cx="12" cy="14" r="1.5"/>
                                 </svg>
                                 <span>Measure</span>
                             </div>
-                            <span class="hint">Collapse</span>
+                            <span class="hint">Now</span>
                         </button>
                     </div>
 
@@ -269,13 +286,14 @@
             <div class="modal-body-scroll">
                 <p>Quantum Tic-Tac-Toe generalizes classic Tic-Tac-Toe using real <strong>Qiskit</strong> quantum computing mechanics:</p>
                 <ul>
+                    <li><strong>Turn Budget (9 Steps):</strong> Each game has a fixed budget of <strong>9 moves</strong> (matching the 9 squares). When the 9th move is played, the game <strong>automatically measures</strong> and collapses the quantum state! Players may also choose to measure earlier at any time.</li>
                     <li><strong>Superposition (|+⟩):</strong> All 9 squares start in equal superposition $|+\rangle = (|0\rangle + |1\rangle)/\sqrt{2}$. Neither player owns any tile initially (50% O, 50% X).</li>
                     <li><strong>Move 'O' (Ry -π/2):</strong> Rotates the qubit to state $|0\rangle$ (North pole of Bloch sphere), claiming the square for <strong>Player O</strong>.</li>
                     <li><strong>Move 'X' (Ry +π/2):</strong> Rotates the qubit to state $|1\rangle$ (South pole of Bloch sphere), claiming the square for <strong>Player X</strong>.</li>
                     <li><strong>NOT Gate (Pauli-X):</strong> Inverts an owned square ($|0\rangle \leftrightarrow |1\rangle$). If applied to an unowned superposition square, $X|+\rangle = |+\rangle$ (leaves it neutral!).</li>
                     <li><strong>SWAP Gate:</strong> Select two squares to exchange their quantum states, transposing strategic positions across the board.</li>
                     <li><strong>Tug-of-War / Interference:</strong> Applying opposite rotations to the same square cancels out: $R_y(\pi/2) \cdot R_y(-\pi/2) = I$, restoring the neutral superposition state.</li>
-                    <li><strong>Measure:</strong> Collapses all 9 qubits into definite classical outcomes. Outcome '0' gives Player O, and '1' gives Player X. The player with the most completed lines wins! Both players can even win simultaneously!</li>
+                    <li><strong>Wavefunction Collapse:</strong> Upon reaching 9 steps (or manual measurement), all 9 qubits collapse into classical outcomes. Outcome '0' gives Player O, and '1' gives Player X. The player with the most completed lines wins! Both players can even win simultaneously!</li>
                 </ul>
             </div>
         </div>

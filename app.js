@@ -1,6 +1,6 @@
 /**
  * Quantum Tic-Tac-Toe - Main Application Controller & Quantum AI
- * Mobile-Optimized, White Theme & Real SVG Icons Edition
+ * Fixed Step Budget (Auto-Measure) & Mobile-Optimized Edition
  * Developed by Quantum Software Developer
  */
 
@@ -77,6 +77,9 @@ class QuantumGameApp {
         this.blochViz = new BlochSphereVisualizer('bloch-canvas');
         this.sound = new SoundFX();
 
+        this.maxSteps = 9; // Fixed step limit: 9 moves total (matching 9 squares of 3x3 board)
+        this.currentStep = 0;
+
         this.currentTurn = 'O'; // 'O' or 'X'
         this.selectedAction = null; // 'O', 'X', 'Not', 'SWAP'
         this.swapTarget = null;
@@ -87,6 +90,7 @@ class QuantumGameApp {
 
         this.initDOM();
         this.renderAll();
+        this.updateStepTracker();
     }
 
     initDOM() {
@@ -186,7 +190,7 @@ class QuantumGameApp {
         const resetBtn = document.getElementById('reset-btn');
         if (resetBtn) resetBtn.addEventListener('click', () => this.resetGame());
 
-        // Measure button
+        // Measure button (Manual early measurement)
         const measureBtn = document.getElementById('measure-btn');
         if (measureBtn) measureBtn.addEventListener('click', () => this.executeMeasure());
 
@@ -205,6 +209,21 @@ class QuantumGameApp {
             this.blochViz.resize();
             this.blochViz.render(this.board.qubits[this.inspectedCell], `Square ${this.inspectedCell}`);
         });
+    }
+
+    updateStepTracker() {
+        const badge = document.getElementById('step-counter-badge');
+        const fill = document.getElementById('step-progress-fill');
+        if (badge) {
+            badge.textContent = `Step ${this.currentStep} / ${this.maxSteps}`;
+        }
+        if (fill) {
+            const pct = Math.min(100, Math.round((this.currentStep / this.maxSteps) * 100));
+            fill.style.width = `${pct}%`;
+            if (pct >= 88) fill.style.background = '#dc2626'; // Red when 1 step remains
+            else if (pct >= 55) fill.style.background = '#d97706'; // Amber midway
+            else fill.style.background = '#2563eb'; // Blue early
+        }
     }
 
     handleActionSelect(action) {
@@ -240,7 +259,7 @@ class QuantumGameApp {
         if (this.board.isMeasured || this.aiThinking) return;
 
         if (!this.selectedAction) {
-            this.setStatusMessage(`Square ${cellIndex} inspected. Select a move button.`);
+            this.setStatusMessage(`Square #${cellIndex} inspected. Select a move action.`);
             return;
         }
 
@@ -281,11 +300,22 @@ class QuantumGameApp {
     }
 
     afterMoveMade(desc) {
+        this.currentStep++;
+        this.updateStepTracker();
         this.selectedAction = null;
         this.swapTarget = null;
         this.updateActionButtons();
         this.renderAll();
         this.addLog(desc);
+
+        // Check if fixed step budget reached -> Auto-measure!
+        if (this.currentStep >= this.maxSteps) {
+            this.setStatusMessage(`Step limit reached (${this.currentStep}/${this.maxSteps})! Automatically collapsing wavefunction...`, 'normal');
+            setTimeout(() => {
+                this.executeMeasure();
+            }, 550);
+            return;
+        }
 
         // Turn toggle
         this.currentTurn = this.currentTurn === 'O' ? 'X' : 'O';
@@ -293,7 +323,7 @@ class QuantumGameApp {
         if (this.vsAI && this.currentTurn === 'X' && !this.board.isMeasured) {
             this.executeAIMove();
         } else {
-            this.setStatusMessage(`Turn: Player ${this.currentTurn}. Select an action.`);
+            this.setStatusMessage(`Turn: Player ${this.currentTurn} (Step ${this.currentStep}/${this.maxSteps}). Select action.`);
         }
     }
 
@@ -321,7 +351,7 @@ class QuantumGameApp {
             this.setStatusMessage(`Measurement Complete: No lines completed (Draw). Click Reset.`, 'draw');
         }
 
-        this.addLog(`Measured. Final lines - Player O: ${this.board.winsO}, Player X: ${this.board.winsX}`);
+        this.addLog(`Measured at Step ${this.currentStep}. Final lines - O: ${this.board.winsO}, X: ${this.board.winsX}`);
         this.updateScoreboard();
     }
 
@@ -351,10 +381,23 @@ class QuantumGameApp {
                 this.addLog(`AI executed SWAP between Square ${aiMove.cell1} and ${aiMove.cell2}`);
             }
 
+            this.currentStep++;
+            this.updateStepTracker();
             this.aiThinking = false;
+
+            // Check if step budget reached after AI move
+            if (this.currentStep >= this.maxSteps) {
+                this.renderAll();
+                this.setStatusMessage(`Step limit reached (${this.currentStep}/${this.maxSteps})! Automatically collapsing wavefunction...`, 'normal');
+                setTimeout(() => {
+                    this.executeMeasure();
+                }, 550);
+                return;
+            }
+
             this.currentTurn = 'O';
             this.renderAll();
-            this.setStatusMessage(`Turn: Player O. Select an action.`);
+            this.setStatusMessage(`Turn: Player O (Step ${this.currentStep}/${this.maxSteps}). Select action.`);
         }, 550);
     }
 
@@ -425,12 +468,14 @@ class QuantumGameApp {
 
     resetGame() {
         this.board.reset();
+        this.currentStep = 0;
         this.currentTurn = 'O';
         this.selectedAction = null;
         this.swapTarget = null;
         this.aiThinking = false;
         this.inspectedCell = 4;
         this.updateActionButtons();
+        this.updateStepTracker();
         this.renderAll();
         this.setStatusMessage(`New round started. All 9 squares in superposition |+⟩. Player O's turn.`);
         this.addLog(`Game reset. Initialized 9 qubits in superposition |+⟩.`);

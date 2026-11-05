@@ -163,7 +163,7 @@ main {
     padding: 12px 12px 24px 12px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 /* Status Banner */
@@ -199,6 +199,67 @@ main {
     border-left-color: var(--accent-purple);
     background: #f5f3ff;
     color: #6d28d9;
+}
+
+/* Step Tracker / Move Budget */
+.step-tracker-container {
+    background: #ffffff;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    box-shadow: var(--shadow-sm);
+}
+
+.step-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    font-family: var(--font-sans);
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.step-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-secondary);
+    font-weight: 700;
+}
+
+.step-badge {
+    background: #eff6ff;
+    color: var(--accent-blue);
+    font-family: var(--font-mono);
+    font-weight: 800;
+    font-size: 0.82rem;
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.step-hint {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+}
+
+.step-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.step-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent-blue);
+    transition: width 0.25s ease, background 0.25s ease;
 }
 
 /* Mobile Segmented Control Tab Bar */
@@ -855,7 +916,7 @@ main {
         font-size: 0.95rem;
     }
     .logo-text p.subtitle {
-        display: none; /* Save space on small phones */
+        display: none;
     }
     .btn-pill {
         padding: 5px 8px;
@@ -884,6 +945,15 @@ main {
     }
     .collapsed-symbol {
         font-size: 1.8rem;
+    }
+    .step-tracker-container {
+        padding: 6px 10px;
+    }
+    .step-info {
+        font-size: 0.72rem;
+    }
+    .step-hint {
+        display: none; /* Save space on small phone */
     }
 }
 
