@@ -78,6 +78,7 @@ class QuantumGameApp {
         this.engine = new QuantumTicTacToeEngine();
         this.graphViz = new EntanglementGraphVisualizer('graph-container');
         this.sound = new SoundFX();
+        this.tutorial = new InteractiveTutorial(this.sound);
 
         this.vsAI = true; // Default: Player vs Quantum AI
         this.aiThinking = false;
@@ -95,6 +96,19 @@ class QuantumGameApp {
 
         this.initDOM();
         this.renderAll();
+
+        // Check if user is new, offer tutorial
+        try {
+            const hasSeen = localStorage.getItem('qt3_tutorial_seen');
+            if (!hasSeen) {
+                setTimeout(() => {
+                    this.tutorial.open(0);
+                    localStorage.setItem('qt3_tutorial_seen', 'true');
+                }, 800);
+            }
+        } catch (e) {
+            // LocalStorage fallback
+        }
     }
 
     initDOM() {
@@ -126,7 +140,6 @@ class QuantumGameApp {
         if (soundBtn) {
             soundBtn.addEventListener('click', () => {
                 this.sound.enabled = !this.sound.enabled;
-                const icon = soundBtn.querySelector('svg');
                 const label = soundBtn.querySelector('.btn-text');
                 if (this.sound.enabled) {
                     soundBtn.classList.remove('muted');
@@ -142,7 +155,7 @@ class QuantumGameApp {
         const resetBtn = document.getElementById('reset-btn');
         if (resetBtn) resetBtn.addEventListener('click', () => this.resetGame());
 
-        // Help Modal
+        // Quick Rules Modal
         const helpBtn = document.getElementById('help-btn');
         const modal = document.getElementById('help-modal');
         const closeModal = document.getElementById('close-modal');
@@ -319,7 +332,6 @@ class QuantumGameApp {
         const opt2Btn = document.getElementById('collapse-btn-2');
 
         const chooser = pendingCycle.chooser;
-        const trigger = pendingCycle.triggerMove;
 
         if (chooserBadge) {
             chooserBadge.textContent = `Player ${chooser}`;

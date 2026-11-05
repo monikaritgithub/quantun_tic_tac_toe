@@ -59,6 +59,13 @@
 
             <!-- Header Quick Actions -->
             <div class="header-right">
+                <button id="tutorial-btn" class="header-btn header-btn-primary" title="Interactive Game Tutorial">
+                    <!-- Modern Gamepad / Tutorial Sparkle Icon -->
+                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                    <span class="btn-text">How to Play</span>
+                </button>
                 <button id="sound-btn" class="header-btn" title="Toggle Sound FX">
                     <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
@@ -76,7 +83,7 @@
                     </svg>
                     <span class="btn-text">Reset</span>
                 </button>
-                <button id="help-btn" class="header-btn header-btn-primary" title="Game Rules & Guide">
+                <button id="help-btn" class="header-btn" title="Quick Rules Reference">
                     <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="10"/>
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
@@ -233,6 +240,64 @@
             </section>
         </main>
 
+        <!-- Interactive Visual Tutorial Modal (Modern Gaming Walkthrough) -->
+        <div id="tutorial-modal" class="modal-backdrop">
+            <div class="modal-dialog tutorial-dialog">
+                <!-- Progress bar across top of card -->
+                <div class="tut-progress-bar">
+                    <div id="tut-progress-fill" class="tut-progress-fill"></div>
+                </div>
+
+                <div class="modal-header tut-header">
+                    <div class="tut-header-left">
+                        <span id="tut-step-badge" class="badge-gaming">Lesson 1 of 6</span>
+                        <h3 id="tut-title" class="tut-slide-title">1. Quantum Superposition — The Two-Square Move</h3>
+                    </div>
+                    <button id="close-tutorial" class="btn-close" aria-label="Close tutorial">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="modal-body tut-body">
+                    <!-- Interactive Visual Canvas / Mini-board preview -->
+                    <div id="tut-visual-pane" class="tut-visual-pane">
+                        <!-- Populated by tutorial.js -->
+                    </div>
+
+                    <!-- Rule Explanation -->
+                    <div id="tut-text-pane" class="tut-text-pane">
+                        <!-- Populated by tutorial.js -->
+                    </div>
+                </div>
+
+                <!-- Tutorial Footer Navigation -->
+                <div class="modal-footer tut-footer">
+                    <button id="tut-prev-btn" class="btn btn-secondary">
+                        <svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                        <span>Back</span>
+                    </button>
+
+                    <div id="tut-dots" class="tut-dots-container">
+                        <!-- 6 dots dynamically populated -->
+                    </div>
+
+                    <div class="tut-footer-right">
+                        <button id="tut-skip-btn" class="btn btn-ghost">Skip Tour</button>
+                        <button id="tut-next-btn" class="btn btn-primary">
+                            <span>Next</span>
+                            <svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Cyclic Entanglement Collapse Dialog Modal -->
         <div id="collapse-modal" class="modal-backdrop">
             <div class="modal-dialog collapse-dialog">
@@ -287,7 +352,7 @@
             </div>
         </div>
 
-        <!-- Rules & Education Modal -->
+        <!-- Quick Rules Reference Modal -->
         <div id="help-modal" class="modal-backdrop">
             <div class="modal-dialog help-dialog">
                 <div class="modal-header">
@@ -386,6 +451,7 @@
     <!-- Scripts in proper dependency order -->
     <script src="quantum-engine.js"></script>
     <script src="graph-visualizer.js"></script>
+    <script src="tutorial.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
