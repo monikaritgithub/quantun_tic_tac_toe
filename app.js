@@ -1,6 +1,6 @@
 /**
  * Quantum Tic-Tac-Toe - Main Application Controller & Quantum AI
- * Light Theme & Real SVG Icons Edition
+ * Mobile-Optimized, White Theme & Real SVG Icons Edition
  * Developed by Quantum Software Developer
  */
 
@@ -110,9 +110,32 @@ class QuantumGameApp {
             });
         });
 
+        // Mobile Segmented Tab Controls
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.dataset.target;
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active-panel'));
+                btn.classList.add('active');
+                
+                const targetPanel = document.getElementById(targetId);
+                if (targetPanel) {
+                    targetPanel.classList.add('active-panel');
+                }
+                
+                if (targetId === 'panel-bloch') {
+                    setTimeout(() => {
+                        this.blochViz.resize();
+                        this.blochViz.render(this.board.qubits[this.inspectedCell], `Square ${this.inspectedCell}`);
+                    }, 50);
+                } else if (targetId === 'panel-circuit') {
+                    this.circuitViz.render(this.board.circuitSteps, this.board.isMeasured);
+                }
+            });
+        });
+
         // Mode switch with real icons
         const modeBtn = document.getElementById('mode-btn');
-        const modeLabel = document.getElementById('mode-label');
         if (modeBtn) {
             modeBtn.addEventListener('click', () => {
                 this.vsAI = !this.vsAI;
@@ -122,14 +145,14 @@ class QuantumGameApp {
                         <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="16" y1="16" x2="16.01" y2="16"/>
                         </svg>
-                        <span>Mode: vs AI</span>
+                        <span class="btn-text">vs AI</span>
                     `;
                 } else {
                     modeBtn.innerHTML = `
                         <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                         </svg>
-                        <span>Mode: 2-Player</span>
+                        <span class="btn-text">2-Player</span>
                     `;
                 }
                 this.resetGame();
@@ -146,14 +169,14 @@ class QuantumGameApp {
                         <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
                         </svg>
-                        <span>Sound ON</span>
+                        <span class="btn-text">Sound</span>
                     `;
                 } else {
                     soundBtn.innerHTML = `
                         <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
                         </svg>
-                        <span>Sound OFF</span>
+                        <span class="btn-text">Mute</span>
                     `;
                 }
             });
@@ -217,7 +240,7 @@ class QuantumGameApp {
         if (this.board.isMeasured || this.aiThinking) return;
 
         if (!this.selectedAction) {
-            this.setStatusMessage(`Square ${cellIndex} inspected on Bloch sphere. Select a move button above.`);
+            this.setStatusMessage(`Square ${cellIndex} inspected. Select a move button.`);
             return;
         }
 
@@ -239,7 +262,7 @@ class QuantumGameApp {
         } else if (this.selectedAction === 'SWAP') {
             if (this.swapTarget === null) {
                 this.swapTarget = cellIndex;
-                this.setStatusMessage(`SWAP: First square is ${cellIndex}. Click the second square to swap.`);
+                this.setStatusMessage(`SWAP: First square #${cellIndex}. Click second square.`);
                 this.highlightTile(cellIndex, true);
                 return;
             } else if (this.swapTarget === cellIndex) {
@@ -252,7 +275,7 @@ class QuantumGameApp {
                 this.board.playSwap(target, cellIndex);
                 this.sound.playSwap();
                 this.swapTarget = null;
-                this.afterMoveMade(`Quantum SWAP executed between Square ${target} and Square ${cellIndex}`);
+                this.afterMoveMade(`SWAP executed between Square ${target} and ${cellIndex}`);
             }
         }
     }
@@ -292,19 +315,19 @@ class QuantumGameApp {
             this.sound.playWin();
         } else if (this.board.winsX > 0 && this.board.winsX === this.board.winsO) {
             this.stats.ties++;
-            this.setStatusMessage(`QUANTUM TIE! Both players formed winning lines simultaneously (${this.board.winsX} each).`, 'tie');
+            this.setStatusMessage(`QUANTUM TIE! Both players formed lines (${this.board.winsX} each).`, 'tie');
             this.sound.playWin();
         } else {
-            this.setStatusMessage(`Measurement Complete: No 3-in-a-row formed (Draw). Click New Game.`, 'draw');
+            this.setStatusMessage(`Measurement Complete: No lines completed (Draw). Click Reset.`, 'draw');
         }
 
-        this.addLog(`Measurement executed. Final lines - Player O: ${this.board.winsO}, Player X: ${this.board.winsX}`);
+        this.addLog(`Measured. Final lines - Player O: ${this.board.winsO}, Player X: ${this.board.winsX}`);
         this.updateScoreboard();
     }
 
     executeAIMove() {
         this.aiThinking = true;
-        this.setStatusMessage(`Quantum AI is calculating optimal state transformation...`);
+        this.setStatusMessage(`Quantum AI is calculating state transformation...`);
 
         setTimeout(() => {
             const aiMove = this.calculateAIMove();
@@ -391,7 +414,7 @@ class QuantumGameApp {
             return { action: 'X', cell: chosen };
         }
 
-        // 5. Claim any unowned or counter an O
+        // 5. Claim any open square
         const openSquares = [0, 1, 2, 3, 4, 5, 6, 7, 8].filter(s => this.board.qubits[s].prob1() < 0.8);
         if (openSquares.length > 0) {
             return { action: 'X', cell: openSquares[0] };
@@ -453,15 +476,15 @@ class QuantumGameApp {
                         <div class="collapsed-symbol ${owner === 'O' ? 'sym-o' : 'sym-x'}">${owner}</div>
                     </div>
                     <div class="tile-footer">
-                        <span class="tile-tags">${history || 'no gates'}</span>
+                        <span>${history || 'collapsed'}</span>
                     </div>
                 `;
             } else {
                 let stateBadge = '|+⟩';
-                if (p0 >= 95) stateBadge = '|0⟩ (O)';
-                else if (p1 >= 95) stateBadge = '|1⟩ (X)';
-                else if (p0 > 55) stateBadge = `~|0⟩ ${p0}%`;
-                else if (p1 > 55) stateBadge = `~|1⟩ ${p1}%`;
+                if (p0 >= 95) stateBadge = '|0⟩';
+                else if (p1 >= 95) stateBadge = '|1⟩';
+                else if (p0 > 55) stateBadge = `~|0⟩`;
+                else if (p1 > 55) stateBadge = `~|1⟩`;
 
                 tile.innerHTML = `
                     <div class="tile-header">
@@ -474,12 +497,12 @@ class QuantumGameApp {
                             <div class="prob-bar bar-x" style="width: ${p1}%" title="P(X) = ${p1}%"></div>
                         </div>
                         <div class="prob-text">
-                            <span class="p-o">O: ${p0}%</span>
-                            <span class="p-x">X: ${p1}%</span>
+                            <span class="p-o">O ${p0}%</span>
+                            <span class="p-x">X ${p1}%</span>
                         </div>
                     </div>
                     <div class="tile-footer">
-                        <span class="tile-tags">${history || 'neutral'}</span>
+                        <span>${history || 'neutral'}</span>
                     </div>
                 `;
             }
