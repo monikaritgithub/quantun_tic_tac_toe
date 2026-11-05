@@ -30,8 +30,10 @@ $$\begin{pmatrix} q_0 & q_1 & q_2 \\ q_3 & q_4 & q_5 \\ q_6 & q_7 & q_8 \end{pma
 
 ## 🚀 Game Features
 
+- **White / Light Theme:** Modern, high-contrast scientific laboratory aesthetic.
+- **Real Vector SVG Icons:** Replaced all emojis with crisp, scalable SVG icons.
 - **Live Vector Circuit Visualizer:** Automatically updates with Qiskit-style gate symbols, SWAP links, barriers, and measurement meters.
-- **Interactive Bloch Sphere:** Real-time 3D/2D projection displaying polar angle $\theta$, azimuthal angle $\phi$, expectation value $\langle Z \rangle$, and probabilities for any selected tile.
+- **Interactive Bloch Sphere:** Real-time projection displaying polar angle $\theta$, azimuthal angle $\phi$, expectation value $\langle Z \rangle$, and probabilities for any selected tile.
 - **Quantum AI Bot:** Evaluates potential winning lines, uses Pauli-X to steal opponent squares, uses SWAP to disrupt lines, and triggers measurement when it holds a statistical advantage.
 - **Real-Time Monte Carlo Predictor:** Continuous 120-shot simulation estimating the win distribution before measurement.
 - **Web Audio API Sound Effects:** Custom synthesized audio cues for gate applications, quantum collapse, and victories.
@@ -44,5 +46,5 @@ $$\begin{pmatrix} q_0 & q_1 & q_2 \\ q_3 & q_4 & q_5 \\ q_6 & q_7 & q_8 \end{pma
 To enable GitHub Pages:
 1. Navigate to repository **Settings** > **Pages**.
 2. Under **Build and deployment** > **Source**, choose **Deploy from a branch**.
-3. Select branch `main` and directory `/ (root)`.
+3. Select branch `main` (or `gh-pages`) and directory `/ (root)`.
 4. Click **Save**. The game will be live at `https://monikaritgithub.github.io/quantun_tic_tac_toe/`.

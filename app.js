@@ -1,5 +1,6 @@
 /**
  * Quantum Tic-Tac-Toe - Main Application Controller & Quantum AI
+ * Light Theme & Real SVG Icons Edition
  * Developed by Quantum Software Developer
  */
 
@@ -79,7 +80,7 @@ class QuantumGameApp {
         this.currentTurn = 'O'; // 'O' or 'X'
         this.selectedAction = null; // 'O', 'X', 'Not', 'SWAP'
         this.swapTarget = null;
-        this.inspectedCell = 4; // Start inspecting center square
+        this.inspectedCell = 4; // Center square default
         this.vsAI = false;
         this.aiThinking = false;
         this.stats = { xWins: 0, oWins: 0, ties: 0, total: 0 };
@@ -89,7 +90,7 @@ class QuantumGameApp {
     }
 
     initDOM() {
-        // Tile buttons
+        // Tile grid
         const grid = document.getElementById('board-grid');
         grid.innerHTML = '';
         for (let i = 0; i < 9; i++) {
@@ -109,14 +110,52 @@ class QuantumGameApp {
             });
         });
 
-        // Mode switch
+        // Mode switch with real icons
         const modeBtn = document.getElementById('mode-btn');
+        const modeLabel = document.getElementById('mode-label');
         if (modeBtn) {
             modeBtn.addEventListener('click', () => {
                 this.vsAI = !this.vsAI;
-                modeBtn.textContent = this.vsAI ? "🤖 Mode: vs Quantum AI" : "👥 Mode: 2-Player Local";
                 modeBtn.classList.toggle('active', this.vsAI);
+                if (this.vsAI) {
+                    modeBtn.innerHTML = `
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="16" y1="16" x2="16.01" y2="16"/>
+                        </svg>
+                        <span>Mode: vs AI</span>
+                    `;
+                } else {
+                    modeBtn.innerHTML = `
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        <span>Mode: 2-Player</span>
+                    `;
+                }
                 this.resetGame();
+            });
+        }
+
+        // Sound toggle with real icons
+        const soundBtn = document.getElementById('sound-btn');
+        if (soundBtn) {
+            soundBtn.addEventListener('click', () => {
+                this.sound.enabled = !this.sound.enabled;
+                if (this.sound.enabled) {
+                    soundBtn.innerHTML = `
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+                        </svg>
+                        <span>Sound ON</span>
+                    `;
+                } else {
+                    soundBtn.innerHTML = `
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
+                        </svg>
+                        <span>Sound OFF</span>
+                    `;
+                }
             });
         }
 
@@ -137,15 +176,6 @@ class QuantumGameApp {
         }
         if (closeBtn && modal) {
             closeBtn.addEventListener('click', () => modal.classList.remove('visible'));
-        }
-
-        // Sound toggle
-        const soundBtn = document.getElementById('sound-btn');
-        if (soundBtn) {
-            soundBtn.addEventListener('click', () => {
-                this.sound.enabled = !this.sound.enabled;
-                soundBtn.textContent = this.sound.enabled ? "🔊 Sound ON" : "🔇 Sound OFF";
-            });
         }
 
         window.addEventListener('resize', () => {
@@ -187,7 +217,7 @@ class QuantumGameApp {
         if (this.board.isMeasured || this.aiThinking) return;
 
         if (!this.selectedAction) {
-            this.setStatusMessage(`Square ${cellIndex} inspected on Bloch sphere. Select a move button above!`);
+            this.setStatusMessage(`Square ${cellIndex} inspected on Bloch sphere. Select a move button above.`);
             return;
         }
 
@@ -209,7 +239,7 @@ class QuantumGameApp {
         } else if (this.selectedAction === 'SWAP') {
             if (this.swapTarget === null) {
                 this.swapTarget = cellIndex;
-                this.setStatusMessage(`SWAP: First square is ${cellIndex}. Now click the second square to swap!`);
+                this.setStatusMessage(`SWAP: First square is ${cellIndex}. Click the second square to swap.`);
                 this.highlightTile(cellIndex, true);
                 return;
             } else if (this.swapTarget === cellIndex) {
@@ -254,18 +284,18 @@ class QuantumGameApp {
         this.stats.total++;
         if (this.board.winsX > this.board.winsO) {
             this.stats.xWins++;
-            this.setStatusMessage(`⚡ Wavefunction Collapsed! Player X WINS! (Lines: ${this.board.winsX} to ${this.board.winsO})`, 'win-x');
+            this.setStatusMessage(`Wavefunction Collapsed: Player X WINS! (Lines: ${this.board.winsX} to ${this.board.winsO})`, 'win-x');
             this.sound.playWin();
         } else if (this.board.winsO > this.board.winsX) {
             this.stats.oWins++;
-            this.setStatusMessage(`⚡ Wavefunction Collapsed! Player O WINS! (Lines: ${this.board.winsO} to ${this.board.winsX})`, 'win-o');
+            this.setStatusMessage(`Wavefunction Collapsed: Player O WINS! (Lines: ${this.board.winsO} to ${this.board.winsX})`, 'win-o');
             this.sound.playWin();
         } else if (this.board.winsX > 0 && this.board.winsX === this.board.winsO) {
             this.stats.ties++;
-            this.setStatusMessage(`⚡ QUANTUM TIE! Both players formed winning lines simultaneously! (${this.board.winsX} each)`, 'tie');
+            this.setStatusMessage(`QUANTUM TIE! Both players formed winning lines simultaneously (${this.board.winsX} each).`, 'tie');
             this.sound.playWin();
         } else {
-            this.setStatusMessage(`⚡ Measurement Complete: No 3-in-a-row formed (Draw). Click New Game!`, 'draw');
+            this.setStatusMessage(`Measurement Complete: No 3-in-a-row formed (Draw). Click New Game.`, 'draw');
         }
 
         this.addLog(`Measurement executed. Final lines - Player O: ${this.board.winsO}, Player X: ${this.board.winsX}`);
@@ -274,7 +304,7 @@ class QuantumGameApp {
 
     executeAIMove() {
         this.aiThinking = true;
-        this.setStatusMessage(`🤖 Quantum AI is calculating optimal state transformation...`);
+        this.setStatusMessage(`Quantum AI is calculating optimal state transformation...`);
 
         setTimeout(() => {
             const aiMove = this.calculateAIMove();
@@ -287,22 +317,22 @@ class QuantumGameApp {
             if (aiMove.action === 'X') {
                 this.board.playX(aiMove.cell);
                 this.sound.playMove();
-                this.addLog(`🤖 AI applied Ry(+π/2) on Square ${aiMove.cell}`);
+                this.addLog(`AI applied Ry(+π/2) on Square ${aiMove.cell}`);
             } else if (aiMove.action === 'NOT') {
                 this.board.playNot(aiMove.cell);
                 this.sound.playNot();
-                this.addLog(`🤖 AI applied Pauli-X on Square ${aiMove.cell}`);
+                this.addLog(`AI applied Pauli-X on Square ${aiMove.cell}`);
             } else if (aiMove.action === 'SWAP') {
                 this.board.playSwap(aiMove.cell1, aiMove.cell2);
                 this.sound.playSwap();
-                this.addLog(`🤖 AI executed SWAP between Square ${aiMove.cell1} and ${aiMove.cell2}`);
+                this.addLog(`AI executed SWAP between Square ${aiMove.cell1} and ${aiMove.cell2}`);
             }
 
             this.aiThinking = false;
             this.currentTurn = 'O';
             this.renderAll();
             this.setStatusMessage(`Turn: Player O. Select an action.`);
-        }, 600);
+        }, 550);
     }
 
     calculateAIMove() {
@@ -319,11 +349,8 @@ class QuantumGameApp {
             const pX_b = this.board.qubits[b].prob1();
             const pX_c = this.board.qubits[c].prob1();
 
-            // Two squares strongly X, third square unowned or O
             if (pX_a > 0.8 && pX_b > 0.8 && pX_c < 0.8) {
-                if (this.board.qubits[c].prob0() > 0.8) {
-                    return { action: 'NOT', cell: c }; // Flip O to X!
-                }
+                if (this.board.qubits[c].prob0() > 0.8) return { action: 'NOT', cell: c };
                 return { action: 'X', cell: c };
             }
             if (pX_a > 0.8 && pX_c > 0.8 && pX_b < 0.8) {
@@ -382,7 +409,7 @@ class QuantumGameApp {
         this.inspectedCell = 4;
         this.updateActionButtons();
         this.renderAll();
-        this.setStatusMessage(`New round started! All 9 squares in superposition |+⟩. Player O's turn.`);
+        this.setStatusMessage(`New round started. All 9 squares in superposition |+⟩. Player O's turn.`);
         this.addLog(`Game reset. Initialized 9 qubits in superposition |+⟩.`);
     }
 
@@ -413,7 +440,6 @@ class QuantumGameApp {
                 const owner = this.board.collapsedBoard[i];
                 tile.classList.add('measured', owner === 'O' ? 'tile-o' : 'tile-x');
 
-                // Check if part of winning line
                 const isWinO = this.board.winningLinesO.some(l => l.includes(i));
                 const isWinX = this.board.winningLinesX.some(l => l.includes(i));
                 if (isWinO || isWinX) tile.classList.add('winning-tile');

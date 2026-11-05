@@ -1,5 +1,5 @@
 /**
- * Interactive 3D/2D Bloch Sphere Visualizer
+ * Interactive 3D/2D Bloch Sphere Visualizer - Light Theme Edition
  * Developed by Quantum Software Developer
  * 
  * Projects the single-qubit state vector on the Bloch sphere,
@@ -37,24 +37,32 @@ class BlochSphereVisualizer {
 
         ctx.clearRect(0, 0, width, height);
 
-        // 1. Sphere background gradient
-        const bgGrad = ctx.createRadialGradient(centerX - radius*0.3, centerY - radius*0.3, radius*0.1, centerX, centerY, radius);
-        bgGrad.addColorStop(0, 'rgba(26, 32, 44, 0.95)');
-        bgGrad.addColorStop(1, 'rgba(15, 20, 30, 0.98)');
+        // 1. Sphere background radial gradient (White / Soft Slate Light Theme)
+        const bgGrad = ctx.createRadialGradient(
+            centerX - radius * 0.3,
+            centerY - radius * 0.3,
+            radius * 0.1,
+            centerX,
+            centerY,
+            radius
+        );
+        bgGrad.addColorStop(0, '#ffffff');
+        bgGrad.addColorStop(0.7, '#f8fafc');
+        bgGrad.addColorStop(1, '#e2e8f0');
         ctx.fillStyle = bgGrad;
         ctx.beginPath();
         ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
         ctx.fill();
 
         // 2. Sphere Outer Ring
-        ctx.strokeStyle = '#4a5568';
+        ctx.strokeStyle = '#94a3b8';
         ctx.lineWidth = 2 * this.scale;
         ctx.stroke();
 
         // 3. Equator Ellipse (X-Y plane)
         ctx.beginPath();
         ctx.ellipse(centerX, centerY, radius, radius * 0.35, 0, 0, Math.PI * 2);
-        ctx.strokeStyle = '#2d3748';
+        ctx.strokeStyle = '#cbd5e1';
         ctx.lineWidth = 1.5 * this.scale;
         ctx.setLineDash([4 * this.scale, 4 * this.scale]);
         ctx.stroke();
@@ -64,7 +72,7 @@ class BlochSphereVisualizer {
         ctx.beginPath();
         ctx.moveTo(centerX, centerY - radius * 1.15);
         ctx.lineTo(centerX, centerY + radius * 1.15);
-        ctx.strokeStyle = '#718096';
+        ctx.strokeStyle = '#64748b';
         ctx.lineWidth = 1.5 * this.scale;
         ctx.stroke();
 
@@ -74,29 +82,26 @@ class BlochSphereVisualizer {
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.lineTo(xProjX, xProjY);
-        ctx.strokeStyle = '#4a5568';
+        ctx.strokeStyle = '#94a3b8';
         ctx.lineWidth = 1.2 * this.scale;
         ctx.stroke();
 
         // Labels on Poles
         ctx.font = `bold ${11 * this.scale}px 'Consolas', monospace`;
-        ctx.fillStyle = '#63b3ed';
+        ctx.fillStyle = '#2563eb'; // Deep Blue for O
         ctx.textAlign = 'center';
         ctx.fillText('|0⟩ (O)', centerX, centerY - radius * 1.2);
 
-        ctx.fillStyle = '#fc8181';
-        ctx.fillText('|1⟩ (X)', centerX, centerY + radius * 1.3);
+        ctx.fillStyle = '#dc2626'; // Red for X
+        ctx.fillText('|1⟩ (X)', centerX, centerY + radius * 1.32);
 
-        ctx.fillStyle = '#68d391';
+        ctx.fillStyle = '#16a34a'; // Green for |+>
         ctx.textAlign = 'left';
         ctx.fillText('|+⟩', xProjX + 4 * this.scale, xProjY + 4 * this.scale);
 
         // 6. State Vector Projection
         const bloch = qubitState.getBlochVector();
         // 3D to 2D isometric projection
-        // x points at 45 deg down-right
-        // y points at 135 deg down-left
-        // z points straight up
         const isoX = bloch.x * 0.7071 - bloch.y * 0.7071;
         const isoY = (bloch.x * 0.7071 + bloch.y * 0.7071) * 0.35 - bloch.z;
 
@@ -109,8 +114,8 @@ class BlochSphereVisualizer {
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.lineTo(tipX, shadowTipY);
-        ctx.strokeStyle = 'rgba(113, 128, 150, 0.4)';
-        ctx.lineWidth = 1 * this.scale;
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
+        ctx.lineWidth = 1.2 * this.scale;
         ctx.setLineDash([2 * this.scale, 2 * this.scale]);
         ctx.stroke();
         ctx.setLineDash([]);
@@ -119,19 +124,19 @@ class BlochSphereVisualizer {
         ctx.beginPath();
         ctx.moveTo(tipX, tipY);
         ctx.lineTo(tipX, shadowTipY);
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.strokeStyle = 'rgba(100, 116, 139, 0.4)';
         ctx.stroke();
 
         // Main State Vector Arrow
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
         ctx.lineTo(tipX, tipY);
-        
+
         // Color based on bias toward 0 or 1
         const p0 = qubitState.prob0();
-        let arrowColor = '#48bb78'; // Green for neutral |+>
-        if (p0 > 0.6) arrowColor = '#4299e1'; // Blue for O
-        else if (p0 < 0.4) arrowColor = '#f56565'; // Red for X
+        let arrowColor = '#16a34a'; // Green for neutral |+>
+        if (p0 > 0.6) arrowColor = '#2563eb'; // Blue for O
+        else if (p0 < 0.4) arrowColor = '#dc2626'; // Red for X
 
         ctx.strokeStyle = arrowColor;
         ctx.lineWidth = 3 * this.scale;
@@ -143,13 +148,13 @@ class BlochSphereVisualizer {
         ctx.fillStyle = arrowColor;
         ctx.fill();
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.5 * this.scale;
+        ctx.lineWidth = 2 * this.scale;
         ctx.stroke();
 
         // Center origin dot
         ctx.beginPath();
-        ctx.arc(centerX, centerY, 3 * this.scale, 0, Math.PI * 2);
-        ctx.fillStyle = '#cbd5e0';
+        ctx.arc(centerX, centerY, 3.5 * this.scale, 0, Math.PI * 2);
+        ctx.fillStyle = '#475569';
         ctx.fill();
     }
 }

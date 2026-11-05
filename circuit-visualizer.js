@@ -1,5 +1,5 @@
 /**
- * Quantum Circuit Visualizer
+ * Quantum Circuit Visualizer - Light Theme Edition
  * Renders an interactive, Qiskit-style vector SVG quantum circuit schematic.
  * Developed by Quantum Software Developer
  */
@@ -33,25 +33,21 @@ class CircuitVisualizer {
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalWidth} ${totalHeight}" width="100%" height="auto" class="quantum-circuit-svg">
                 <defs>
                     <linearGradient id="gateGradO" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#1e3c72" />
-                        <stop offset="100%" stop-color="#2a5298" />
+                        <stop offset="0%" stop-color="#eff6ff" />
+                        <stop offset="100%" stop-color="#dbeafe" />
                     </linearGradient>
                     <linearGradient id="gateGradX" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#8a1c14" />
-                        <stop offset="100%" stop-color="#d32f2f" />
+                        <stop offset="0%" stop-color="#fff1f2" />
+                        <stop offset="100%" stop-color="#fee2e2" />
                     </linearGradient>
                     <linearGradient id="gateGradH" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#006699" />
-                        <stop offset="100%" stop-color="#0088cc" />
+                        <stop offset="0%" stop-color="#f0f9ff" />
+                        <stop offset="100%" stop-color="#e0f2fe" />
                     </linearGradient>
                     <linearGradient id="gateGradNot" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#e67e22" />
-                        <stop offset="100%" stop-color="#f39c12" />
+                        <stop offset="0%" stop-color="#fffbeb" />
+                        <stop offset="100%" stop-color="#fef3c7" />
                     </linearGradient>
-                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                        <feGaussianBlur stdDeviation="3" result="blur" />
-                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                    </filter>
                 </defs>
         `;
 
@@ -61,8 +57,8 @@ class CircuitVisualizer {
             
             // Wire label
             svgHtml += `
-                <text x="12" y="${y + 4}" fill="#a0aec0" font-family="'Consolas', monospace" font-size="12" font-weight="bold">q[${q}]: |0⟩</text>
-                <line x1="${this.paddingLeft - 10}" y1="${y}" x2="${totalWidth - 30}" y2="${y}" stroke="#4a5568" stroke-width="2" />
+                <text x="12" y="${y + 4}" fill="#334155" font-family="'Consolas', monospace" font-size="12" font-weight="bold">q[${q}]: |0⟩</text>
+                <line x1="${this.paddingLeft - 10}" y1="${y}" x2="${totalWidth - 30}" y2="${y}" stroke="#94a3b8" stroke-width="1.8" />
             `;
         }
 
@@ -75,8 +71,8 @@ class CircuitVisualizer {
             
             // H gate box
             svgHtml += `
-                <rect x="${currentX}" y="${y - 14}" width="28" height="28" rx="4" fill="url(#gateGradH)" stroke="#63b3ed" stroke-width="1.5" />
-                <text x="${currentX + 14}" y="${y + 5}" fill="#ffffff" font-family="'Consolas', monospace" font-size="12" font-weight="bold" text-anchor="middle">H</text>
+                <rect x="${currentX}" y="${y - 14}" width="28" height="28" rx="4" fill="url(#gateGradH)" stroke="#0284c7" stroke-width="1.5" />
+                <text x="${currentX + 14}" y="${y + 5}" fill="#0369a1" font-family="'Consolas', monospace" font-size="12" font-weight="bold" text-anchor="middle">H</text>
             `;
         }
 
@@ -86,7 +82,7 @@ class CircuitVisualizer {
         const barrierTop = this.paddingTop + 5;
         const barrierBottom = this.paddingTop + (this.numQubits - 1) * this.wireHeight + this.wireHeight / 2 + 10;
         svgHtml += `
-            <line x1="${currentX}" y1="${barrierTop}" x2="${currentX}" y2="${barrierBottom}" stroke="#718096" stroke-width="2" stroke-dasharray="4,4" />
+            <line x1="${currentX}" y1="${barrierTop}" x2="${currentX}" y2="${barrierBottom}" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="4,4" />
         `;
 
         currentX += 35;
@@ -97,21 +93,24 @@ class CircuitVisualizer {
                 const q = step.qubit;
                 const y = this.paddingTop + q * this.wireHeight + this.wireHeight / 2;
                 let fill = "url(#gateGradO)";
-                let stroke = "#4299e1";
+                let stroke = "#2563eb";
+                let textColor = "#1d4ed8";
                 let text = step.gate;
 
                 if (step.player === 'X') {
                     fill = "url(#gateGradX)";
-                    stroke = "#fc8181";
+                    stroke = "#dc2626";
+                    textColor = "#b91c1c";
                 } else if (step.player === 'NOT') {
                     fill = "url(#gateGradNot)";
-                    stroke = "#fbd38d";
+                    stroke = "#d97706";
+                    textColor = "#92400e";
                 }
 
                 svgHtml += `
                     <g class="circuit-gate-anim">
-                        <rect x="${currentX}" y="${y - 15}" width="54" height="30" rx="5" fill="${fill}" stroke="${stroke}" stroke-width="1.8" filter="url(#glow)" />
-                        <text x="${currentX + 27}" y="${y + 4}" fill="#ffffff" font-family="'Consolas', monospace" font-size="10.5" font-weight="bold" text-anchor="middle">${text}</text>
+                        <rect x="${currentX}" y="${y - 15}" width="54" height="30" rx="5" fill="${fill}" stroke="${stroke}" stroke-width="1.8" />
+                        <text x="${currentX + 27}" y="${y + 4}" fill="${textColor}" font-family="'Consolas', monospace" font-size="10.5" font-weight="bold" text-anchor="middle">${text}</text>
                     </g>
                 `;
                 currentX += 65;
@@ -125,19 +124,19 @@ class CircuitVisualizer {
 
                 // Vertical connecting line
                 svgHtml += `
-                    <line x1="${xCenter}" y1="${y1}" x2="${xCenter}" y2="${y2}" stroke="#9f7aea" stroke-width="2.5" />
+                    <line x1="${xCenter}" y1="${y1}" x2="${xCenter}" y2="${y2}" stroke="#7c3aed" stroke-width="2.5" />
                 `;
 
                 // SWAP Cross on q1
                 svgHtml += `
-                    <line x1="${xCenter - 8}" y1="${y1 - 8}" x2="${xCenter + 8}" y2="${y1 + 8}" stroke="#b794f4" stroke-width="3" stroke-linecap="round" />
-                    <line x1="${xCenter + 8}" y1="${y1 - 8}" x2="${xCenter - 8}" y2="${y1 + 8}" stroke="#b794f4" stroke-width="3" stroke-linecap="round" />
+                    <line x1="${xCenter - 8}" y1="${y1 - 8}" x2="${xCenter + 8}" y2="${y1 + 8}" stroke="#6d28d9" stroke-width="2.8" stroke-linecap="round" />
+                    <line x1="${xCenter + 8}" y1="${y1 - 8}" x2="${xCenter - 8}" y2="${y1 + 8}" stroke="#6d28d9" stroke-width="2.8" stroke-linecap="round" />
                 `;
 
                 // SWAP Cross on q2
                 svgHtml += `
-                    <line x1="${xCenter - 8}" y1="${y2 - 8}" x2="${xCenter + 8}" y2="${y2 + 8}" stroke="#b794f4" stroke-width="3" stroke-linecap="round" />
-                    <line x1="${xCenter + 8}" y1="${y2 - 8}" x2="${xCenter - 8}" y2="${y2 + 8}" stroke="#b794f4" stroke-width="3" stroke-linecap="round" />
+                    <line x1="${xCenter - 8}" y1="${y2 - 8}" x2="${xCenter + 8}" y2="${y2 + 8}" stroke="#6d28d9" stroke-width="2.8" stroke-linecap="round" />
+                    <line x1="${xCenter + 8}" y1="${y2 - 8}" x2="${xCenter - 8}" y2="${y2 + 8}" stroke="#6d28d9" stroke-width="2.8" stroke-linecap="round" />
                 `;
 
                 currentX += 50;
@@ -149,7 +148,7 @@ class CircuitVisualizer {
             currentX += 10;
             // Pre-measurement Barrier
             svgHtml += `
-                <line x1="${currentX}" y1="${barrierTop}" x2="${currentX}" y2="${barrierBottom}" stroke="#e2e8f0" stroke-width="2" stroke-dasharray="4,4" />
+                <line x1="${currentX}" y1="${barrierTop}" x2="${currentX}" y2="${barrierBottom}" stroke="#94a3b8" stroke-width="1.8" stroke-dasharray="4,4" />
             `;
             currentX += 30;
 
@@ -158,9 +157,9 @@ class CircuitVisualizer {
                 const y = this.paddingTop + q * this.wireHeight + this.wireHeight / 2;
                 svgHtml += `
                     <g class="circuit-meter-anim">
-                        <rect x="${currentX}" y="${y - 15}" width="34" height="30" rx="4" fill="#2d3748" stroke="#cbd5e0" stroke-width="1.5" />
-                        <path d="M ${currentX + 7} ${y + 8} A 10 10 0 0 1 ${currentX + 27} ${y + 8}" fill="none" stroke="#e2e8f0" stroke-width="1.5" />
-                        <line x1="${currentX + 17}" y1="${y + 7}" x2="${currentX + 24}" y2="${y - 4}" stroke="#63b3ed" stroke-width="2" stroke-linecap="round" />
+                        <rect x="${currentX}" y="${y - 15}" width="34" height="30" rx="4" fill="#f8fafc" stroke="#64748b" stroke-width="1.5" />
+                        <path d="M ${currentX + 7} ${y + 8} A 10 10 0 0 1 ${currentX + 27} ${y + 8}" fill="none" stroke="#475569" stroke-width="1.5" />
+                        <line x1="${currentX + 17}" y1="${y + 7}" x2="${currentX + 24}" y2="${y - 4}" stroke="#2563eb" stroke-width="2" stroke-linecap="round" />
                     </g>
                 `;
             }
@@ -168,9 +167,9 @@ class CircuitVisualizer {
             // Classical register line at the bottom
             const cY = this.paddingTop + this.numQubits * this.wireHeight + 10;
             svgHtml += `
-                <text x="12" y="${cY + 4}" fill="#718096" font-family="'Consolas', monospace" font-size="11" font-weight="bold">c: [9]</text>
-                <line x1="${this.paddingLeft - 10}" y1="${cY - 2}" x2="${totalWidth - 30}" y2="${cY - 2}" stroke="#718096" stroke-width="1.2" />
-                <line x1="${this.paddingLeft - 10}" y1="${cY + 2}" x2="${totalWidth - 30}" y2="${cY + 2}" stroke="#718096" stroke-width="1.2" />
+                <text x="12" y="${cY + 4}" fill="#475569" font-family="'Consolas', monospace" font-size="11" font-weight="bold">c: [9]</text>
+                <line x1="${this.paddingLeft - 10}" y1="${cY - 2}" x2="${totalWidth - 30}" y2="${cY - 2}" stroke="#64748b" stroke-width="1.2" />
+                <line x1="${this.paddingLeft - 10}" y1="${cY + 2}" x2="${totalWidth - 30}" y2="${cY + 2}" stroke="#64748b" stroke-width="1.2" />
             `;
         }
 
