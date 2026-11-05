@@ -1,7 +1,7 @@
 /**
- * Quantum Tic-Tac-Toe - Main Application Controller & Quantum AI
- * Fixed Step Budget (Auto-Measure) & Mobile-Optimized Edition
- * Developed by Quantum Software Developer
+ * Quantum Tic-Tac-Toe - Main Application Controller
+ * Allan Goff's Authentic Quantum Mechanics Model
+ * Responsive Web Application for Desktop & Mobile
  */
 
 class SoundFX {
@@ -11,30 +11,28 @@ class SoundFX {
     }
 
     init() {
-        if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
+        if (!this.ctx) {
             const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            this.ctx = new AudioCtx();
+            if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
         }
     }
 
-    playTone(freq, type = 'sine', duration = 0.15, vol = 0.1) {
+    playTone(freq, duration, type = 'sine', gainVal = 0.15) {
         if (!this.enabled) return;
         try {
             this.init();
             if (!this.ctx) return;
-            if (this.ctx.state === 'suspended') this.ctx.resume();
-
             const osc = this.ctx.createOscillator();
             const gain = this.ctx.createGain();
-
             osc.type = type;
             osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-            gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+            gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
-
             osc.connect(gain);
             gain.connect(this.ctx.destination);
-
             osc.start();
             osc.stop(this.ctx.currentTime + duration);
         } catch (e) {
@@ -42,592 +40,540 @@ class SoundFX {
         }
     }
 
-    playMove() {
-        this.playTone(520, 'sine', 0.12, 0.08);
+    playSelect() {
+        this.playTone(520, 0.08, 'sine', 0.1);
     }
 
-    playNot() {
-        this.playTone(320, 'triangle', 0.2, 0.1);
-        setTimeout(() => this.playTone(640, 'sine', 0.15, 0.08), 80);
+    playEntangle() {
+        if (!this.enabled) return;
+        this.playTone(440, 0.12, 'sine', 0.12);
+        setTimeout(() => this.playTone(660, 0.18, 'sine', 0.12), 60);
     }
 
-    playSwap() {
-        this.playTone(400, 'sawtooth', 0.1, 0.06);
-        setTimeout(() => this.playTone(600, 'sine', 0.15, 0.08), 90);
-        setTimeout(() => this.playTone(800, 'sine', 0.2, 0.06), 180);
+    playCycleAlert() {
+        if (!this.enabled) return;
+        this.playTone(320, 0.15, 'triangle', 0.2);
+        setTimeout(() => this.playTone(480, 0.2, 'triangle', 0.22), 120);
+        setTimeout(() => this.playTone(640, 0.3, 'sine', 0.25), 240);
     }
 
-    playMeasure() {
-        this.playTone(200, 'sawtooth', 0.4, 0.12);
-        setTimeout(() => this.playTone(440, 'sine', 0.3, 0.1), 100);
-        setTimeout(() => this.playTone(880, 'sine', 0.5, 0.09), 250);
+    playCollapse() {
+        if (!this.enabled) return;
+        this.playTone(220, 0.25, 'sawtooth', 0.15);
+        setTimeout(() => this.playTone(330, 0.3, 'sine', 0.2), 100);
+        setTimeout(() => this.playTone(550, 0.4, 'sine', 0.25), 220);
     }
 
     playWin() {
-        [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => {
-            setTimeout(() => this.playTone(freq, 'sine', 0.3, 0.1), i * 120);
+        if (!this.enabled) return;
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((f, i) => {
+            setTimeout(() => this.playTone(f, 0.3, 'sine', 0.2), i * 110);
         });
     }
 }
 
 class QuantumGameApp {
     constructor() {
-        this.board = new QuantumTicTacToeBoard();
-        this.circuitViz = new CircuitVisualizer('circuit-container');
-        this.blochViz = new BlochSphereVisualizer('bloch-canvas');
+        this.engine = new QuantumTicTacToeEngine();
+        this.graphViz = new EntanglementGraphVisualizer('graph-container');
         this.sound = new SoundFX();
 
-        this.maxSteps = 9; // Fixed step limit: 9 moves total (matching 9 squares of 3x3 board)
-        this.currentStep = 0;
-
-        this.currentTurn = 'O'; // 'O' or 'X'
-        this.selectedAction = null; // 'O', 'X', 'Not', 'SWAP'
-        this.swapTarget = null;
-        this.inspectedCell = 4; // Center square default
-        this.vsAI = false;
+        this.vsAI = true; // Default: Player vs Quantum AI
         this.aiThinking = false;
-        this.stats = { xWins: 0, oWins: 0, ties: 0, total: 0 };
+
+        // Current turn's first selected square (0..8) or null
+        this.firstSelectedSquare = null;
+
+        // Scores
+        this.scores = {
+            X: 0,
+            O: 0,
+            draws: 0,
+            totalGames: 0
+        };
 
         this.initDOM();
         this.renderAll();
-        this.updateStepTracker();
     }
 
     initDOM() {
-        // Tile grid
-        const grid = document.getElementById('board-grid');
-        grid.innerHTML = '';
-        for (let i = 0; i < 9; i++) {
-            const tile = document.createElement('div');
-            tile.className = 'quantum-tile';
-            tile.id = `tile-${i}`;
-            tile.dataset.index = i;
-            tile.addEventListener('click', () => this.handleTileClick(i));
-            grid.appendChild(tile);
-        }
+        // Mode toggle (Pass & Play vs AI)
+        const mode2P = document.getElementById('mode-2p');
+        const modeAI = document.getElementById('mode-ai');
 
-        // Action buttons
-        document.querySelectorAll('.action-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const action = btn.dataset.action;
-                this.handleActionSelect(action);
-            });
-        });
-
-        // Mobile Segmented Tab Controls
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const targetId = btn.dataset.target;
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active-panel'));
-                btn.classList.add('active');
-                
-                const targetPanel = document.getElementById(targetId);
-                if (targetPanel) {
-                    targetPanel.classList.add('active-panel');
-                }
-                
-                if (targetId === 'panel-bloch') {
-                    setTimeout(() => {
-                        this.blochViz.resize();
-                        this.blochViz.render(this.board.qubits[this.inspectedCell], `Square ${this.inspectedCell}`);
-                    }, 50);
-                } else if (targetId === 'panel-circuit') {
-                    this.circuitViz.render(this.board.circuitSteps, this.board.isMeasured);
-                }
-            });
-        });
-
-        // Mode switch with real icons
-        const modeBtn = document.getElementById('mode-btn');
-        if (modeBtn) {
-            modeBtn.addEventListener('click', () => {
-                this.vsAI = !this.vsAI;
-                modeBtn.classList.toggle('active', this.vsAI);
+        if (mode2P && modeAI) {
+            mode2P.addEventListener('click', () => {
                 if (this.vsAI) {
-                    modeBtn.innerHTML = `
-                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="16" y1="16" x2="16.01" y2="16"/>
-                        </svg>
-                        <span class="btn-text">vs AI</span>
-                    `;
-                } else {
-                    modeBtn.innerHTML = `
-                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                        </svg>
-                        <span class="btn-text">2-Player</span>
-                    `;
+                    this.vsAI = false;
+                    mode2P.classList.add('active');
+                    modeAI.classList.remove('active');
+                    this.resetGame();
                 }
-                this.resetGame();
+            });
+            modeAI.addEventListener('click', () => {
+                if (!this.vsAI) {
+                    this.vsAI = true;
+                    modeAI.classList.add('active');
+                    mode2P.classList.remove('active');
+                    this.resetGame();
+                }
             });
         }
 
-        // Sound toggle with real icons
+        // Sound toggle
         const soundBtn = document.getElementById('sound-btn');
         if (soundBtn) {
             soundBtn.addEventListener('click', () => {
                 this.sound.enabled = !this.sound.enabled;
+                const icon = soundBtn.querySelector('svg');
+                const label = soundBtn.querySelector('.btn-text');
                 if (this.sound.enabled) {
-                    soundBtn.innerHTML = `
-                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-                        </svg>
-                        <span class="btn-text">Sound</span>
-                    `;
+                    soundBtn.classList.remove('muted');
+                    if (label) label.textContent = 'Sound: ON';
                 } else {
-                    soundBtn.innerHTML = `
-                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>
-                        </svg>
-                        <span class="btn-text">Mute</span>
-                    `;
+                    soundBtn.classList.add('muted');
+                    if (label) label.textContent = 'Sound: OFF';
                 }
             });
         }
 
-        // Reset / Replay
+        // Reset button
         const resetBtn = document.getElementById('reset-btn');
         if (resetBtn) resetBtn.addEventListener('click', () => this.resetGame());
 
-        // Measure button (Manual early measurement)
-        const measureBtn = document.getElementById('measure-btn');
-        if (measureBtn) measureBtn.addEventListener('click', () => this.executeMeasure());
-
-        // Help modal
+        // Help Modal
         const helpBtn = document.getElementById('help-btn');
         const modal = document.getElementById('help-modal');
-        const closeBtn = document.getElementById('close-modal');
+        const closeModal = document.getElementById('close-modal');
         if (helpBtn && modal) {
             helpBtn.addEventListener('click', () => modal.classList.add('visible'));
         }
-        if (closeBtn && modal) {
-            closeBtn.addEventListener('click', () => modal.classList.remove('visible'));
+        if (closeModal && modal) {
+            closeModal.addEventListener('click', () => modal.classList.remove('visible'));
         }
 
-        window.addEventListener('resize', () => {
-            this.blochViz.resize();
-            this.blochViz.render(this.board.qubits[this.inspectedCell], `Square ${this.inspectedCell}`);
+        // Segmented Mobile Tabs
+        const tabBtns = document.querySelectorAll('.mobile-tab-btn');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                tabBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const tabTarget = btn.getAttribute('data-tab');
+                this.switchMobileTab(tabTarget);
+            });
         });
-    }
 
-    updateStepTracker() {
-        const badge = document.getElementById('step-counter-badge');
-        const fill = document.getElementById('step-progress-fill');
-        if (badge) {
-            badge.textContent = `Step ${this.currentStep} / ${this.maxSteps}`;
-        }
-        if (fill) {
-            const pct = Math.min(100, Math.round((this.currentStep / this.maxSteps) * 100));
-            fill.style.width = `${pct}%`;
-            if (pct >= 88) fill.style.background = '#dc2626'; // Red when 1 step remains
-            else if (pct >= 55) fill.style.background = '#d97706'; // Amber midway
-            else fill.style.background = '#2563eb'; // Blue early
-        }
-    }
-
-    handleActionSelect(action) {
-        if (this.board.isMeasured || this.aiThinking) return;
-
-        if (this.selectedAction === action) {
-            this.selectedAction = null;
-            this.swapTarget = null;
-            this.setStatusMessage(`Cancelled. Select an action.`);
-        } else {
-            this.selectedAction = action;
-            this.swapTarget = null;
-
-            if (action === 'SWAP') {
-                this.setStatusMessage(`SWAP Selected: Click the first square to swap.`);
-            } else if (action === 'O') {
-                this.setStatusMessage(`Move O: Click a square to rotate toward |0⟩ (Player O).`);
-            } else if (action === 'X') {
-                this.setStatusMessage(`Move X: Click a square to rotate toward |1⟩ (Player X).`);
-            } else if (action === 'Not') {
-                this.setStatusMessage(`NOT Gate: Click an owned square to flip its state.`);
-            }
-        }
-        this.updateActionButtons();
-    }
-
-    handleTileClick(cellIndex) {
-        // Always update inspected cell for Bloch sphere
-        this.inspectedCell = cellIndex;
-        this.blochViz.render(this.board.qubits[cellIndex], `Square ${cellIndex}`);
-        this.updateTelemetry(cellIndex);
-
-        if (this.board.isMeasured || this.aiThinking) return;
-
-        if (!this.selectedAction) {
-            this.setStatusMessage(`Square #${cellIndex} inspected. Select a move action.`);
-            return;
-        }
-
-        if (this.selectedAction === 'O') {
-            this.board.playO(cellIndex);
-            this.sound.playMove();
-            this.afterMoveMade(`Player O applied Ry(-π/2) to Square ${cellIndex}`);
-
-        } else if (this.selectedAction === 'X') {
-            this.board.playX(cellIndex);
-            this.sound.playMove();
-            this.afterMoveMade(`Player X applied Ry(+π/2) to Square ${cellIndex}`);
-
-        } else if (this.selectedAction === 'Not') {
-            this.board.playNot(cellIndex);
-            this.sound.playNot();
-            this.afterMoveMade(`Pauli-X (NOT) applied to Square ${cellIndex}`);
-
-        } else if (this.selectedAction === 'SWAP') {
-            if (this.swapTarget === null) {
-                this.swapTarget = cellIndex;
-                this.setStatusMessage(`SWAP: First square #${cellIndex}. Click second square.`);
-                this.highlightTile(cellIndex, true);
-                return;
-            } else if (this.swapTarget === cellIndex) {
-                this.swapTarget = null;
-                this.setStatusMessage(`SWAP cancelled for same square. Select first square again.`);
-                this.highlightTile(cellIndex, false);
-                return;
-            } else {
-                const target = this.swapTarget;
-                this.board.playSwap(target, cellIndex);
-                this.sound.playSwap();
-                this.swapTarget = null;
-                this.afterMoveMade(`SWAP executed between Square ${target} and ${cellIndex}`);
+        // Initialize 3x3 Board Grid click listeners
+        const boardEl = document.getElementById('quantum-board');
+        if (boardEl) {
+            boardEl.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'board-tile';
+                cell.setAttribute('data-index', i);
+                cell.addEventListener('click', () => this.handleSquareClick(i));
+                boardEl.appendChild(cell);
             }
         }
     }
 
-    afterMoveMade(desc) {
-        this.currentStep++;
-        this.updateStepTracker();
-        this.selectedAction = null;
-        this.swapTarget = null;
-        this.updateActionButtons();
-        this.renderAll();
-        this.addLog(desc);
+    switchMobileTab(tabName) {
+        const boardCol = document.getElementById('board-column');
+        const graphCol = document.getElementById('graph-column');
+        const historyCol = document.getElementById('history-column');
 
-        // Check if fixed step budget reached -> Auto-measure!
-        if (this.currentStep >= this.maxSteps) {
-            this.setStatusMessage(`Step limit reached (${this.currentStep}/${this.maxSteps})! Automatically collapsing wavefunction...`, 'normal');
-            setTimeout(() => {
-                this.executeMeasure();
-            }, 550);
-            return;
+        if (!boardCol || !graphCol || !historyCol) return;
+
+        // Hide all first on mobile
+        boardCol.classList.remove('mobile-active');
+        graphCol.classList.remove('mobile-active');
+        historyCol.classList.remove('mobile-active');
+
+        if (tabName === 'board') {
+            boardCol.classList.add('mobile-active');
+        } else if (tabName === 'graph') {
+            graphCol.classList.add('mobile-active');
+        } else if (tabName === 'history') {
+            historyCol.classList.add('mobile-active');
         }
-
-        // Turn toggle
-        this.currentTurn = this.currentTurn === 'O' ? 'X' : 'O';
-
-        if (this.vsAI && this.currentTurn === 'X' && !this.board.isMeasured) {
-            this.executeAIMove();
-        } else {
-            this.setStatusMessage(`Turn: Player ${this.currentTurn} (Step ${this.currentStep}/${this.maxSteps}). Select action.`);
-        }
-    }
-
-    executeMeasure() {
-        if (this.board.isMeasured || this.aiThinking) return;
-
-        this.sound.playMeasure();
-        this.board.measure();
-        this.renderAll();
-
-        this.stats.total++;
-        if (this.board.winsX > this.board.winsO) {
-            this.stats.xWins++;
-            this.setStatusMessage(`Wavefunction Collapsed: Player X WINS! (Lines: ${this.board.winsX} to ${this.board.winsO})`, 'win-x');
-            this.sound.playWin();
-        } else if (this.board.winsO > this.board.winsX) {
-            this.stats.oWins++;
-            this.setStatusMessage(`Wavefunction Collapsed: Player O WINS! (Lines: ${this.board.winsO} to ${this.board.winsX})`, 'win-o');
-            this.sound.playWin();
-        } else if (this.board.winsX > 0 && this.board.winsX === this.board.winsO) {
-            this.stats.ties++;
-            this.setStatusMessage(`QUANTUM TIE! Both players formed lines (${this.board.winsX} each).`, 'tie');
-            this.sound.playWin();
-        } else {
-            this.setStatusMessage(`Measurement Complete: No lines completed (Draw). Click Reset.`, 'draw');
-        }
-
-        this.addLog(`Measured at Step ${this.currentStep}. Final lines - O: ${this.board.winsO}, X: ${this.board.winsX}`);
-        this.updateScoreboard();
-    }
-
-    executeAIMove() {
-        this.aiThinking = true;
-        this.setStatusMessage(`Quantum AI is calculating state transformation...`);
-
-        setTimeout(() => {
-            const aiMove = this.calculateAIMove();
-            if (aiMove.action === 'MEASURE') {
-                this.aiThinking = false;
-                this.executeMeasure();
-                return;
-            }
-
-            if (aiMove.action === 'X') {
-                this.board.playX(aiMove.cell);
-                this.sound.playMove();
-                this.addLog(`AI applied Ry(+π/2) on Square ${aiMove.cell}`);
-            } else if (aiMove.action === 'NOT') {
-                this.board.playNot(aiMove.cell);
-                this.sound.playNot();
-                this.addLog(`AI applied Pauli-X on Square ${aiMove.cell}`);
-            } else if (aiMove.action === 'SWAP') {
-                this.board.playSwap(aiMove.cell1, aiMove.cell2);
-                this.sound.playSwap();
-                this.addLog(`AI executed SWAP between Square ${aiMove.cell1} and ${aiMove.cell2}`);
-            }
-
-            this.currentStep++;
-            this.updateStepTracker();
-            this.aiThinking = false;
-
-            // Check if step budget reached after AI move
-            if (this.currentStep >= this.maxSteps) {
-                this.renderAll();
-                this.setStatusMessage(`Step limit reached (${this.currentStep}/${this.maxSteps})! Automatically collapsing wavefunction...`, 'normal');
-                setTimeout(() => {
-                    this.executeMeasure();
-                }, 550);
-                return;
-            }
-
-            this.currentTurn = 'O';
-            this.renderAll();
-            this.setStatusMessage(`Turn: Player O (Step ${this.currentStep}/${this.maxSteps}). Select action.`);
-        }, 550);
-    }
-
-    calculateAIMove() {
-        // AI Strategy:
-        // 1. Check Monte Carlo expectation: if AI (X) already has > 65% win probability, trigger MEASURE!
-        const mc = this.board.simulateMonteCarlo(150);
-        if (mc.probX > 0.65) {
-            return { action: 'MEASURE' };
-        }
-
-        // 2. Check if AI can secure a win on a line:
-        for (const [a, b, c] of QuantumTicTacToeBoard.WINNING_TRIPLES) {
-            const pX_a = this.board.qubits[a].prob1();
-            const pX_b = this.board.qubits[b].prob1();
-            const pX_c = this.board.qubits[c].prob1();
-
-            if (pX_a > 0.8 && pX_b > 0.8 && pX_c < 0.8) {
-                if (this.board.qubits[c].prob0() > 0.8) return { action: 'NOT', cell: c };
-                return { action: 'X', cell: c };
-            }
-            if (pX_a > 0.8 && pX_c > 0.8 && pX_b < 0.8) {
-                if (this.board.qubits[b].prob0() > 0.8) return { action: 'NOT', cell: b };
-                return { action: 'X', cell: b };
-            }
-            if (pX_b > 0.8 && pX_c > 0.8 && pX_a < 0.8) {
-                if (this.board.qubits[a].prob0() > 0.8) return { action: 'NOT', cell: a };
-                return { action: 'X', cell: a };
-            }
-        }
-
-        // 3. Block opponent (Player O) line:
-        for (const [a, b, c] of QuantumTicTacToeBoard.WINNING_TRIPLES) {
-            const pO_a = this.board.qubits[a].prob0();
-            const pO_b = this.board.qubits[b].prob0();
-            const pO_c = this.board.qubits[c].prob0();
-
-            if (pO_a > 0.8 && pO_b > 0.8 && pO_c < 0.8) {
-                return { action: 'X', cell: c };
-            }
-            if (pO_a > 0.8 && pO_c > 0.8 && pO_b < 0.8) {
-                return { action: 'X', cell: b };
-            }
-            if (pO_b > 0.8 && pO_c > 0.8 && pO_a < 0.8) {
-                return { action: 'X', cell: a };
-            }
-        }
-
-        // 4. Claim strategic Center (4) or Corners (0, 2, 6, 8)
-        if (this.board.qubits[4].prob1() < 0.8 && this.board.qubits[4].prob0() < 0.8) {
-            return { action: 'X', cell: 4 };
-        }
-
-        const corners = [0, 2, 6, 8].filter(c => this.board.qubits[c].prob1() < 0.8 && this.board.qubits[c].prob0() < 0.8);
-        if (corners.length > 0) {
-            const chosen = corners[Math.floor(Math.random() * corners.length)];
-            return { action: 'X', cell: chosen };
-        }
-
-        // 5. Claim any open square
-        const openSquares = [0, 1, 2, 3, 4, 5, 6, 7, 8].filter(s => this.board.qubits[s].prob1() < 0.8);
-        if (openSquares.length > 0) {
-            return { action: 'X', cell: openSquares[0] };
-        }
-
-        return { action: 'MEASURE' };
     }
 
     resetGame() {
-        this.board.reset();
-        this.currentStep = 0;
-        this.currentTurn = 'O';
-        this.selectedAction = null;
-        this.swapTarget = null;
+        this.engine.reset();
+        this.firstSelectedSquare = null;
         this.aiThinking = false;
-        this.inspectedCell = 4;
-        this.updateActionButtons();
-        this.updateStepTracker();
+        this.hideCollapseModal();
         this.renderAll();
-        this.setStatusMessage(`New round started. All 9 squares in superposition |+⟩. Player O's turn.`);
-        this.addLog(`Game reset. Initialized 9 qubits in superposition |+⟩.`);
+        this.addLogEntry('New game started. Player X begins.');
+    }
+
+    handleSquareClick(sqIndex) {
+        if (this.engine.isGameOver || this.aiThinking || this.engine.pendingCycle) return;
+
+        // If in vs AI mode and it's AI's turn, ignore clicks
+        if (this.vsAI && this.engine.currentTurn === 'O') return;
+
+        // Check if square is already collapsed
+        if (this.engine.classical[sqIndex] !== null) {
+            this.sound.playSelect();
+            this.flashStatus(`Square #${sqIndex + 1} is already collapsed! Choose an open square.`, 'warning');
+            return;
+        }
+
+        // First square selection
+        if (this.firstSelectedSquare === null) {
+            this.firstSelectedSquare = sqIndex;
+            this.sound.playSelect();
+            this.renderBoard();
+            this.setStatusMessage(
+                `Square #${sqIndex + 1} selected (1/2). Tap a second square to complete Move ${this.engine.currentTurn}${this.engine.moveNum}.`,
+                'active'
+            );
+            return;
+        }
+
+        // Tapping the same square deselects it
+        if (this.firstSelectedSquare === sqIndex) {
+            this.firstSelectedSquare = null;
+            this.sound.playSelect();
+            this.renderBoard();
+            this.setStatusMessage(
+                `Selection cancelled. Player ${this.engine.currentTurn}: Tap square 1 of 2.`,
+                'normal'
+            );
+            return;
+        }
+
+        // Second square selected: commit move!
+        const sq1 = this.firstSelectedSquare;
+        const sq2 = sqIndex;
+        this.firstSelectedSquare = null;
+
+        this.sound.playEntangle();
+        const result = this.engine.playMove(sq1, sq2);
+
+        if (!result.success) {
+            this.flashStatus(result.error || 'Invalid move', 'warning');
+            this.renderBoard();
+            return;
+        }
+
+        const movePlayer = result.cycle ? result.pendingCycle.triggerMove.player : (this.engine.currentTurn === 'X' ? 'O' : 'X');
+        const moveId = this.engine.moveNum - 1;
+        this.addLogEntry(`Move ${movePlayer}${moveId}: Entangled Squares #${sq1 + 1} and #${sq2 + 1}`);
+
+        if (result.cycle) {
+            // Cyclic entanglement triggered!
+            this.sound.playCycleAlert();
+            this.renderAll();
+            this.showCollapseModal(result.pendingCycle);
+        } else {
+            this.renderAll();
+            this.checkAndExecuteAITurn();
+        }
+    }
+
+    checkAndExecuteAITurn() {
+        if (this.engine.isGameOver || this.engine.pendingCycle) return;
+
+        if (this.vsAI && this.engine.currentTurn === 'O') {
+            this.aiThinking = true;
+            this.setStatusMessage(`Quantum AI is evaluating entanglement states...`, 'thinking');
+            this.renderBoard();
+
+            setTimeout(() => {
+                const aiMove = this.engine.computeBestAIMove();
+                if (!aiMove) {
+                    this.aiThinking = false;
+                    return;
+                }
+
+                this.sound.playEntangle();
+                const result = this.engine.playMove(aiMove.sq1, aiMove.sq2);
+                this.aiThinking = false;
+
+                const moveId = this.engine.moveNum - 1;
+                this.addLogEntry(`AI Move O${moveId}: Entangled Squares #${aiMove.sq1 + 1} and #${aiMove.sq2 + 1}`);
+
+                if (result.cycle) {
+                    this.sound.playCycleAlert();
+                    this.renderAll();
+                    this.showCollapseModal(result.pendingCycle);
+                } else {
+                    this.renderAll();
+                }
+            }, 550);
+        }
+    }
+
+    showCollapseModal(pendingCycle) {
+        const modal = document.getElementById('collapse-modal');
+        if (!modal) return;
+
+        const chooserBadge = document.getElementById('collapse-chooser');
+        const cyclePathSpan = document.getElementById('collapse-cycle-path');
+        const opt1Details = document.getElementById('collapse-opt1-details');
+        const opt2Details = document.getElementById('collapse-opt2-details');
+        const opt1Btn = document.getElementById('collapse-btn-1');
+        const opt2Btn = document.getElementById('collapse-btn-2');
+
+        const chooser = pendingCycle.chooser;
+        const trigger = pendingCycle.triggerMove;
+
+        if (chooserBadge) {
+            chooserBadge.textContent = `Player ${chooser}`;
+            chooserBadge.className = `chooser-badge player-${chooser.toLowerCase()}`;
+        }
+
+        if (cyclePathSpan) {
+            const pathStr = pendingCycle.cycleVertices.map(v => `#${v + 1}`).join(' ↔ ');
+            cyclePathSpan.textContent = `Loop: ${pathStr}`;
+        }
+
+        const formatDetails = (details) => {
+            return details.map(d => `
+                <div class="collapse-item">
+                    <span class="collapse-mark mark-${d.player.toLowerCase()}">${d.player}<sub>${d.moveId}</sub></span>
+                    <span class="collapse-arrow">→</span>
+                    <span class="collapse-dest">Square #${d.square + 1}</span>
+                </div>
+            `).join('');
+        };
+
+        if (opt1Details) opt1Details.innerHTML = formatDetails(pendingCycle.option1.details);
+        if (opt2Details) opt2Details.innerHTML = formatDetails(pendingCycle.option2.details);
+
+        // Bind buttons
+        if (opt1Btn) {
+            opt1Btn.onclick = () => this.handleCollapseChoice(1);
+        }
+        if (opt2Btn) {
+            opt2Btn.onclick = () => this.handleCollapseChoice(2);
+        }
+
+        modal.classList.add('visible');
+
+        // If in vs AI mode and AI is the chooser:
+        if (this.vsAI && chooser === 'O') {
+            if (opt1Btn) opt1Btn.disabled = true;
+            if (opt2Btn) opt2Btn.disabled = true;
+            this.setStatusMessage(`Quantum AI is selecting optimal collapse resolution...`, 'thinking');
+
+            setTimeout(() => {
+                const bestChoice = this.engine.computeBestCollapseChoice();
+                if (bestChoice === 1 && opt1Btn) opt1Btn.classList.add('ai-highlight');
+                if (bestChoice === 2 && opt2Btn) opt2Btn.classList.add('ai-highlight');
+
+                setTimeout(() => {
+                    if (opt1Btn) {
+                        opt1Btn.disabled = false;
+                        opt1Btn.classList.remove('ai-highlight');
+                    }
+                    if (opt2Btn) {
+                        opt2Btn.disabled = false;
+                        opt2Btn.classList.remove('ai-highlight');
+                    }
+                    this.handleCollapseChoice(bestChoice);
+                }, 400);
+            }, 650);
+        } else {
+            if (opt1Btn) opt1Btn.disabled = false;
+            if (opt2Btn) opt2Btn.disabled = false;
+            this.setStatusMessage(`Player ${chooser}: Choose how to collapse the cyclic entanglement!`, 'active');
+        }
+    }
+
+    hideCollapseModal() {
+        const modal = document.getElementById('collapse-modal');
+        if (modal) modal.classList.remove('visible');
+    }
+
+    handleCollapseChoice(optionIndex) {
+        this.hideCollapseModal();
+        this.sound.playCollapse();
+
+        const result = this.engine.resolveCollapse(optionIndex);
+        if (!result.success) return;
+
+        this.addLogEntry(`Cycle resolved (Option ${optionIndex}). Squares collapsed into classical reality.`);
+        this.renderAll();
+
+        if (result.winStatus.isGameOver) {
+            this.handleGameOver(result.winStatus);
+        } else {
+            this.checkAndExecuteAITurn();
+        }
+    }
+
+    handleGameOver(result) {
+        this.sound.playWin();
+        this.scores.totalGames++;
+
+        if (result.winner === 'X') {
+            this.scores.X += result.scores ? result.scores.X : 1;
+            if (result.scores && result.scores.O) this.scores.O += result.scores.O;
+            this.setStatusMessage(`🎉 Game Over: Player X WINS! ${result.reason}`, 'win-x');
+        } else if (result.winner === 'O') {
+            this.scores.O += result.scores ? result.scores.O : 1;
+            if (result.scores && result.scores.X) this.scores.X += result.scores.X;
+            this.setStatusMessage(`🎉 Game Over: Player O WINS! ${result.reason}`, 'win-o');
+        } else {
+            this.scores.draws++;
+            this.setStatusMessage(`Game Over: Draw! ${result.reason}`, 'draw');
+        }
+
+        this.updateScoreboard();
+        this.renderBoard();
+        this.addLogEntry(`Match finished. Result: ${result.winner} (${result.reason})`);
     }
 
     renderAll() {
         this.renderBoard();
-        this.circuitViz.render(this.board.circuitSteps, this.board.isMeasured);
-        this.blochViz.resize();
-        this.blochViz.render(this.board.qubits[this.inspectedCell], `Square ${this.inspectedCell}`);
-        this.updateTelemetry(this.inspectedCell);
-        this.updateMonteCarlo();
+        this.renderTurnStatus();
+        this.graphViz.render(this.engine, this.engine.pendingCycle);
         this.updateScoreboard();
     }
 
     renderBoard() {
-        for (let i = 0; i < 9; i++) {
-            const tile = document.getElementById(`tile-${i}`);
-            if (!tile) continue;
+        const boardEl = document.getElementById('quantum-board');
+        if (!boardEl) return;
 
-            const q = this.board.qubits[i];
-            const p0 = Math.round(q.prob0() * 100);
-            const p1 = Math.round(q.prob1() * 100);
-            const history = this.board.historyTags[i].join(' ');
+        const cells = boardEl.querySelectorAll('.board-tile');
+        cells.forEach((cell, idx) => {
+            const classical = this.engine.classical[idx];
+            const spookyMarks = this.engine.getSpookyMarksForSquare(idx);
+            const isSelected = this.firstSelectedSquare === idx;
 
-            tile.className = 'quantum-tile';
-            if (i === this.inspectedCell) tile.classList.add('inspected');
+            // Reset classes
+            cell.className = 'board-tile';
+            cell.innerHTML = '';
 
-            if (this.board.isMeasured) {
-                const owner = this.board.collapsedBoard[i];
-                tile.classList.add('measured', owner === 'O' ? 'tile-o' : 'tile-x');
+            // Square number indicator in top-left
+            const sqNum = document.createElement('span');
+            sqNum.className = 'tile-number';
+            sqNum.textContent = `${idx + 1}`;
+            cell.appendChild(sqNum);
 
-                const isWinO = this.board.winningLinesO.some(l => l.includes(i));
-                const isWinX = this.board.winningLinesX.some(l => l.includes(i));
-                if (isWinO || isWinX) tile.classList.add('winning-tile');
+            if (isSelected) {
+                cell.classList.add('selected');
+            }
 
-                tile.innerHTML = `
-                    <div class="tile-header">
-                        <span class="tile-idx">#${i}</span>
-                        <span class="tile-state">|${owner === 'O' ? '0' : '1'}⟩</span>
+            if (classical) {
+                // Square has collapsed into classical reality!
+                cell.classList.add('collapsed');
+                cell.classList.add(classical.player === 'X' ? 'collapsed-x' : 'collapsed-o');
+
+                const markEl = document.createElement('div');
+                markEl.className = 'classical-symbol';
+                markEl.innerHTML = `
+                    <span class="symbol-char">${classical.player}</span>
+                    <span class="symbol-sub">${classical.moveId}</span>
+                `;
+                cell.appendChild(markEl);
+
+                // Highlight winning lines
+                if (this.engine.gameResult && this.engine.gameResult.winningLines) {
+                    for (const line of this.engine.gameResult.winningLines) {
+                        if (line.includes(idx)) {
+                            cell.classList.add('winning-cell');
+                        }
+                    }
+                }
+            } else {
+                // Superposition state: render spooky marks container
+                const spookyContainer = document.createElement('div');
+                spookyContainer.className = 'spooky-container';
+
+                spookyMarks.forEach(sm => {
+                    const chip = document.createElement('span');
+                    chip.className = `spooky-chip chip-${sm.player.toLowerCase()}`;
+                    chip.innerHTML = `${sm.player}<sub>${sm.id}</sub>`;
+                    spookyContainer.appendChild(chip);
+                });
+
+                cell.appendChild(spookyContainer);
+            }
+        });
+    }
+
+    renderTurnStatus() {
+        if (this.engine.isGameOver) return;
+
+        const turn = this.engine.currentTurn;
+        const moveNum = this.engine.moveNum;
+        const banner = document.getElementById('turn-banner');
+
+        if (banner) {
+            banner.className = `turn-banner turn-${turn.toLowerCase()}`;
+            const isHumanTurn = !this.vsAI || turn === 'X';
+
+            if (this.firstSelectedSquare !== null) {
+                banner.innerHTML = `
+                    <div class="turn-indicator-badge">
+                        <span class="turn-player">Player ${turn}</span>
+                        <span class="turn-move">Move ${turn}<sub>${moveNum}</sub></span>
                     </div>
-                    <div class="tile-body">
-                        <div class="collapsed-symbol ${owner === 'O' ? 'sym-o' : 'sym-x'}">${owner}</div>
+                    <div class="turn-prompt">Square #${this.firstSelectedSquare + 1} chosen. <strong>Tap 2nd square</strong> to entangle!</div>
+                `;
+            } else if (!isHumanTurn) {
+                banner.innerHTML = `
+                    <div class="turn-indicator-badge">
+                        <span class="turn-player">Quantum AI</span>
+                        <span class="turn-move">Move O<sub>${moveNum}</sub></span>
                     </div>
-                    <div class="tile-footer">
-                        <span>${history || 'collapsed'}</span>
-                    </div>
+                    <div class="turn-prompt">Calculating quantum superposition...</div>
                 `;
             } else {
-                let stateBadge = '|+⟩';
-                if (p0 >= 95) stateBadge = '|0⟩';
-                else if (p1 >= 95) stateBadge = '|1⟩';
-                else if (p0 > 55) stateBadge = `~|0⟩`;
-                else if (p1 > 55) stateBadge = `~|1⟩`;
-
-                tile.innerHTML = `
-                    <div class="tile-header">
-                        <span class="tile-idx">#${i}</span>
-                        <span class="tile-state">${stateBadge}</span>
+                banner.innerHTML = `
+                    <div class="turn-indicator-badge">
+                        <span class="turn-player">Player ${turn}</span>
+                        <span class="turn-move">Move ${turn}<sub>${moveNum}</sub></span>
                     </div>
-                    <div class="tile-body">
-                        <div class="prob-bars">
-                            <div class="prob-bar bar-o" style="width: ${p0}%" title="P(O) = ${p0}%"></div>
-                            <div class="prob-bar bar-x" style="width: ${p1}%" title="P(X) = ${p1}%"></div>
-                        </div>
-                        <div class="prob-text">
-                            <span class="p-o">O ${p0}%</span>
-                            <span class="p-x">X ${p1}%</span>
-                        </div>
-                    </div>
-                    <div class="tile-footer">
-                        <span>${history || 'neutral'}</span>
-                    </div>
+                    <div class="turn-prompt">Tap <strong>Square 1 of 2</strong> to place spooky mark.</div>
                 `;
             }
         }
     }
 
-    updateTelemetry(cellIdx) {
-        const q = this.board.qubits[cellIdx];
-        const bloch = q.getBlochVector();
-        const p0 = (q.prob0() * 100).toFixed(1);
-        const p1 = (q.prob1() * 100).toFixed(1);
-
-        document.getElementById('tel-target').textContent = `Square #${cellIdx}`;
-        document.getElementById('tel-theta').textContent = `${(bloch.theta * 180 / Math.PI).toFixed(1)}°`;
-        document.getElementById('tel-phi').textContent = `${(bloch.phi * 180 / Math.PI).toFixed(1)}°`;
-        document.getElementById('tel-z').textContent = bloch.z.toFixed(2);
-        document.getElementById('tel-p0').textContent = `${p0}%`;
-        document.getElementById('tel-p1').textContent = `${p1}%`;
-    }
-
-    updateMonteCarlo() {
-        if (this.board.isMeasured) {
-            document.getElementById('mc-bar-container').style.display = 'none';
-            return;
-        }
-        document.getElementById('mc-bar-container').style.display = 'block';
-
-        const mc = this.board.simulateMonteCarlo(120);
-        const pX = Math.round(mc.probX * 100);
-        const pO = Math.round(mc.probO * 100);
-        const pTie = Math.round(mc.probTie * 100);
-        const pDraw = Math.round(mc.probDraw * 100);
-
-        document.getElementById('mc-fill-o').style.width = `${pO}%`;
-        document.getElementById('mc-fill-x').style.width = `${pX}%`;
-        document.getElementById('mc-fill-tie').style.width = `${pTie}%`;
-        document.getElementById('mc-fill-draw').style.width = `${pDraw}%`;
-
-        document.getElementById('mc-label-o').textContent = `O: ${pO}%`;
-        document.getElementById('mc-label-x').textContent = `X: ${pX}%`;
-        document.getElementById('mc-label-tie').textContent = `Tie: ${pTie}%`;
-        document.getElementById('mc-label-draw').textContent = `Draw: ${pDraw}%`;
-    }
-
-    updateActionButtons() {
-        document.querySelectorAll('.action-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.action === this.selectedAction);
-        });
-    }
-
-    highlightTile(cellIdx, active) {
-        const tile = document.getElementById(`tile-${cellIdx}`);
-        if (tile) tile.classList.toggle('swap-target', active);
-    }
-
     setStatusMessage(msg, type = 'normal') {
-        const el = document.getElementById('status-msg');
-        if (!el) return;
-        el.textContent = msg;
-        el.className = 'status-banner';
-        if (type !== 'normal') el.classList.add(`status-${type}`);
+        const msgEl = document.getElementById('status-message');
+        if (msgEl) {
+            msgEl.textContent = msg;
+            msgEl.className = `status-message status-${type}`;
+        }
     }
 
-    addLog(text) {
-        const log = document.getElementById('game-log');
-        if (!log) return;
-        const entry = document.createElement('div');
-        entry.className = 'log-entry';
-        const time = new Date().toLocaleTimeString().split(' ')[0];
-        entry.innerHTML = `<span class="log-time">[${time}]</span> ${text}`;
-        log.insertBefore(entry, log.firstChild);
+    flashStatus(msg, type = 'warning') {
+        this.setStatusMessage(msg, type);
+        setTimeout(() => {
+            this.renderTurnStatus();
+        }, 1800);
     }
 
     updateScoreboard() {
-        document.getElementById('score-o').textContent = this.stats.oWins;
-        document.getElementById('score-x').textContent = this.stats.xWins;
-        document.getElementById('score-ties').textContent = this.stats.ties;
+        const scoreX = document.getElementById('score-x');
+        const scoreO = document.getElementById('score-o');
+        const scoreDraws = document.getElementById('score-draws');
+
+        if (scoreX) scoreX.textContent = Number.isInteger(this.scores.X) ? this.scores.X : this.scores.X.toFixed(1);
+        if (scoreO) scoreO.textContent = Number.isInteger(this.scores.O) ? this.scores.O : this.scores.O.toFixed(1);
+        if (scoreDraws) scoreDraws.textContent = this.scores.draws;
+    }
+
+    addLogEntry(text) {
+        const logContainer = document.getElementById('move-log');
+        if (!logContainer) return;
+
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-text">${text}</span>`;
+        logContainer.prepend(entry);
     }
 }
 
+// Instantiate on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
     window.gameApp = new QuantumGameApp();
 });

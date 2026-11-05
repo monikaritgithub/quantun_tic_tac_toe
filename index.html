@@ -2,312 +2,390 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Quantum Tic-Tac-Toe | Qiskit Quantum Simulator</title>
-    <meta name="description" content="Quantum Tic-Tac-Toe web game powered by a live 9-qubit quantum circuit simulator, Bloch sphere visualizer, and dynamic unitary gates.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Quantum Tic-Tac-Toe — Allan Goff's Quantum Mechanics Game</title>
+    <meta name="description" content="Authentic Quantum Tic-Tac-Toe game based on physicist Allan Goff's model with superposition, cyclic entanglement, collapse cascades, and subscript tiebreaker rules.">
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-
-    <!-- Header Navigation -->
-    <header>
-        <div class="nav-container">
-            <div class="logo-group">
-                <div class="logo-badge">
-                    <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <div class="app-shell">
+        <!-- Top Navigation Bar -->
+        <header class="app-header">
+            <div class="header-left">
+                <div class="brand-logo">
+                    <!-- Real SVG Atom / Quantum Orbit Icon -->
+                    <svg class="icon icon-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="2.5"/>
-                        <ellipse cx="12" cy="12" rx="9" ry="3.8" transform="rotate(30 12 12)"/>
-                        <ellipse cx="12" cy="12" rx="9" ry="3.8" transform="rotate(-30 12 12)"/>
-                        <ellipse cx="12" cy="12" rx="9" ry="3.8" transform="rotate(90 12 12)"/>
+                        <ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(30 12 12)"/>
+                        <ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(90 12 12)"/>
+                        <ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(150 12 12)"/>
                     </svg>
-                </div>
-                <div class="logo-text">
-                    <h1>Quantum Tic-Tac-Toe</h1>
-                    <p class="subtitle">9-Qubit Quantum Simulator</p>
+                    <div class="brand-text">
+                        <h1>Quantum Tic-Tac-Toe</h1>
+                        <span class="brand-tag">Allan Goff Model</span>
+                    </div>
                 </div>
             </div>
-            <div class="header-controls">
-                <button id="mode-btn" class="btn-pill" title="Toggle AI or 2-Player mode" aria-label="Toggle Mode">
+
+            <!-- Mode Selector Switch -->
+            <div class="header-center">
+                <div class="mode-switch-group">
+                    <button id="mode-ai" class="mode-btn active" title="Play against Quantum AI">
+                        <!-- Bot Icon -->
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="10" rx="2"/>
+                            <circle cx="12" cy="5" r="2"/>
+                            <path d="M12 7v4"/>
+                            <line x1="8" y1="16" x2="8.01" y2="16"/>
+                            <line x1="16" y1="16" x2="16.01" y2="16"/>
+                        </svg>
+                        <span>vs AI</span>
+                    </button>
+                    <button id="mode-2p" class="mode-btn" title="Pass and play with 2 local players">
+                        <!-- Two Users Icon -->
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        <span>2-Player</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Header Quick Actions -->
+            <div class="header-right">
+                <button id="sound-btn" class="header-btn" title="Toggle Sound FX">
                     <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
                     </svg>
-                    <span class="btn-text" id="mode-label">2-Player</span>
+                    <span class="btn-text">Sound: ON</span>
                 </button>
-                <button id="sound-btn" class="btn-pill" title="Toggle Sound" aria-label="Toggle Sound">
+                <button id="reset-btn" class="header-btn" title="Reset Game">
                     <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-                    </svg>
-                    <span class="btn-text" id="sound-label">Sound</span>
-                </button>
-                <button id="help-btn" class="btn-pill" title="Quantum Rules" aria-label="How to play">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                    </svg>
-                    <span class="btn-text">Rules</span>
-                </button>
-                <button id="reset-btn" class="btn-pill" title="New Game" aria-label="New Game">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+                        <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                        <path d="M21 3v5h-5"/>
+                        <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+                        <path d="M3 21v-5h5"/>
                     </svg>
                     <span class="btn-text">Reset</span>
                 </button>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Workspace -->
-    <main>
-        <!-- Status Notification Banner -->
-        <div id="status-msg" class="status-banner">
-            Initialized 9 qubits in superposition |+⟩. Player O's turn.
-        </div>
-
-        <!-- Fixed Step / Move Budget Tracker -->
-        <div class="step-tracker-container">
-            <div class="step-info">
-                <span class="step-label">
+                <button id="help-btn" class="header-btn header-btn-primary" title="Game Rules & Guide">
                     <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
                     </svg>
-                    <span>Turn Budget:</span>
-                </span>
-                <span id="step-counter-badge" class="step-badge">Step 0 / 9</span>
-                <span class="step-hint">Auto-collapses at Step 9</span>
-            </div>
-            <div class="step-progress-bar">
-                <div id="step-progress-fill" class="step-progress-fill" style="width: 0%"></div>
-            </div>
-        </div>
-
-        <!-- Mobile Segmented Navigation Tabs (Shown on mobile & tablets) -->
-        <div class="mobile-tabs-container">
-            <div class="segmented-control">
-                <button class="tab-btn active" data-target="panel-game">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
-                    <span>Board</span>
-                </button>
-                <button class="tab-btn" data-target="panel-circuit">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3"/></svg>
-                    <span>Circuit</span>
-                </button>
-                <button class="tab-btn" data-target="panel-bloch">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                    <span>Bloch</span>
-                </button>
-                <button class="tab-btn" data-target="panel-stats">
-                    <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M18 2H6v7a6 6 0 0 0 12 0V2z"/></svg>
-                    <span>Stats</span>
+                    <span class="btn-text">Rules</span>
                 </button>
             </div>
-        </div>
+        </header>
 
-        <!-- Primary Game Workspace -->
-        <div class="game-workspace">
-            
-            <!-- Tab Panel 1: Board & Controls (Default) -->
-            <div id="panel-game" class="tab-panel active-panel">
-                <div class="board-card">
-                    <!-- Action Buttons Bar -->
-                    <div class="actions-bar">
-                        <button class="action-btn btn-o" data-action="O" title="Rotate square toward |0> (Player O)">
-                            <div class="action-btn-title">
-                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                    <circle cx="12" cy="12" r="9"/>
-                                </svg>
-                                <span>Player O</span>
-                            </div>
-                            <span class="hint">Ry(-π/2)</span>
-                        </button>
-
-                        <button class="action-btn btn-x" data-action="X" title="Rotate square toward |1> (Player X)">
-                            <div class="action-btn-title">
-                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                                </svg>
-                                <span>Player X</span>
-                            </div>
-                            <span class="hint">Ry(+π/2)</span>
-                        </button>
-
-                        <button class="action-btn btn-not" data-action="Not" title="Pauli-X NOT Gate">
-                            <div class="action-btn-title">
-                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polygon points="4 4 16 12 4 20 4 4"/><circle cx="18.5" cy="12" r="2.5"/>
-                                </svg>
-                                <span>NOT</span>
-                            </div>
-                            <span class="hint">Pauli-X</span>
-                        </button>
-
-                        <button class="action-btn btn-swap" data-action="SWAP" title="Quantum SWAP Gate">
-                            <div class="action-btn-title">
-                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>
-                                </svg>
-                                <span>SWAP</span>
-                            </div>
-                            <span class="hint">Exchange</span>
-                        </button>
-
-                        <button id="measure-btn" class="action-btn btn-measure" title="Execute Projective Measurement Immediately">
-                            <div class="action-btn-title">
-                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M4 14a8 8 0 0 1 16 0"/><path d="M12 14l3.5-5"/><rect x="2" y="16" width="20" height="4" rx="2"/><circle cx="12" cy="14" r="1.5"/>
-                                </svg>
-                                <span>Measure</span>
-                            </div>
-                            <span class="hint">Now</span>
-                        </button>
-                    </div>
-
-                    <!-- 3x3 Interactive Board -->
-                    <div class="board-wrapper">
-                        <div id="board-grid" class="board-grid">
-                            <!-- Populated dynamically by app.js -->
-                        </div>
-                    </div>
-
-                    <!-- Real-Time Monte Carlo Win Expectation -->
-                    <div class="mc-container" id="mc-bar-container">
-                        <div class="mc-header">
-                            <span>Wavefunction Distribution (120 Shots):</span>
-                        </div>
-                        <div class="mc-bar">
-                            <div id="mc-fill-o" class="mc-segment mc-seg-o" style="width: 25%"></div>
-                            <div id="mc-fill-x" class="mc-segment mc-seg-x" style="width: 25%"></div>
-                            <div id="mc-fill-tie" class="mc-segment mc-seg-tie" style="width: 10%"></div>
-                            <div id="mc-fill-draw" class="mc-segment mc-seg-draw" style="width: 40%"></div>
-                        </div>
-                        <div class="mc-legend">
-                            <span id="mc-label-o" class="p-o">O: 25%</span>
-                            <span id="mc-label-x" class="p-x">X: 25%</span>
-                            <span id="mc-label-tie" style="color: #7c3aed">Tie: 10%</span>
-                            <span id="mc-label-draw" style="color: #64748b">Draw: 40%</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab Panel 2: Live Quantum Circuit -->
-            <div id="panel-circuit" class="tab-panel">
-                <div class="circuit-card">
-                    <div class="circuit-header">
-                        <h3>
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/>
-                            </svg>
-                            Live 9-Qubit Circuit (Qiskit)
-                        </h3>
-                        <span class="circuit-sub">Scroll horizontally to inspect gates</span>
-                    </div>
-                    <div class="circuit-scroll-container" id="circuit-container">
-                        <!-- SVG dynamically rendered by circuit-visualizer.js -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab Panel 3: Bloch Sphere Visualizer & Telemetry -->
-            <div id="panel-bloch" class="tab-panel">
-                <div class="analytics-card">
-                    <h3>
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                        </svg>
-                        Bloch Sphere Projection
-                    </h3>
-                    <p class="section-desc">Tap any board square to project its state vector</p>
-                    <div class="bloch-container">
-                        <canvas id="bloch-canvas" width="220" height="220"></canvas>
-                    </div>
-                    <div class="telemetry-grid">
-                        <div class="tel-item"><span class="tel-label">Target:</span><span id="tel-target" class="tel-val">Square #4</span></div>
-                        <div class="tel-item"><span class="tel-label">Polar θ:</span><span id="tel-theta" class="tel-val">90.0°</span></div>
-                        <div class="tel-item"><span class="tel-label">Azimuth φ:</span><span id="tel-phi" class="tel-val">0.0°</span></div>
-                        <div class="tel-item"><span class="tel-label">⟨Z⟩ = z:</span><span id="tel-z" class="tel-val">0.00</span></div>
-                        <div class="tel-item"><span class="tel-label">P(O) = |α|²:</span><span id="tel-p0" class="tel-val">50.0%</span></div>
-                        <div class="tel-item"><span class="tel-label">P(X) = |β|²:</span><span id="tel-p1" class="tel-val">50.0%</span></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab Panel 4: Scoreboard & Move Log -->
-            <div id="panel-stats" class="tab-panel">
-                <div class="sidebar-panel">
-                    <div class="analytics-card">
-                        <h3>
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M18 2H6v7a6 6 0 0 0 12 0V2z"/>
-                            </svg>
-                            Session Scoreboard
-                        </h3>
-                        <div class="score-row">
-                            <div class="score-box">
-                                <div id="score-o" class="score-num score-o">0</div>
-                                <div class="tel-label">Player O</div>
-                            </div>
-                            <div class="score-box">
-                                <div id="score-ties" class="score-num score-ties">0</div>
-                                <div class="tel-label">Ties</div>
-                            </div>
-                            <div class="score-box">
-                                <div id="score-x" class="score-num score-x">0</div>
-                                <div class="tel-label">Player X</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="log-card">
-                        <h3 class="log-heading">
-                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/>
-                            </svg>
-                            Quantum Move Log
-                        </h3>
-                        <div id="game-log" class="log-content">
-                            <!-- Populated dynamically -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </main>
-
-    <!-- Help & Quantum Rules Modal -->
-    <div id="help-modal" class="modal-overlay">
-        <div class="modal-card">
-            <button id="close-modal" class="close-btn" aria-label="Close Modal">&times;</button>
-            <h2>
-                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        <!-- Mobile Segmented Tab Bar (Visible on phones only) -->
+        <nav class="mobile-tabs-bar">
+            <button class="mobile-tab-btn active" data-tab="board">
+                <svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>
+                    <line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>
                 </svg>
-                How to Play Quantum Tic-Tac-Toe
-            </h2>
-            <div class="modal-body-scroll">
-                <p>Quantum Tic-Tac-Toe generalizes classic Tic-Tac-Toe using real <strong>Qiskit</strong> quantum computing mechanics:</p>
-                <ul>
-                    <li><strong>Turn Budget (9 Steps):</strong> Each game has a fixed budget of <strong>9 moves</strong> (matching the 9 squares). When the 9th move is played, the game <strong>automatically measures</strong> and collapses the quantum state! Players may also choose to measure earlier at any time.</li>
-                    <li><strong>Superposition (|+⟩):</strong> All 9 squares start in equal superposition $|+\rangle = (|0\rangle + |1\rangle)/\sqrt{2}$. Neither player owns any tile initially (50% O, 50% X).</li>
-                    <li><strong>Move 'O' (Ry -π/2):</strong> Rotates the qubit to state $|0\rangle$ (North pole of Bloch sphere), claiming the square for <strong>Player O</strong>.</li>
-                    <li><strong>Move 'X' (Ry +π/2):</strong> Rotates the qubit to state $|1\rangle$ (South pole of Bloch sphere), claiming the square for <strong>Player X</strong>.</li>
-                    <li><strong>NOT Gate (Pauli-X):</strong> Inverts an owned square ($|0\rangle \leftrightarrow |1\rangle$). If applied to an unowned superposition square, $X|+\rangle = |+\rangle$ (leaves it neutral!).</li>
-                    <li><strong>SWAP Gate:</strong> Select two squares to exchange their quantum states, transposing strategic positions across the board.</li>
-                    <li><strong>Tug-of-War / Interference:</strong> Applying opposite rotations to the same square cancels out: $R_y(\pi/2) \cdot R_y(-\pi/2) = I$, restoring the neutral superposition state.</li>
-                    <li><strong>Wavefunction Collapse:</strong> Upon reaching 9 steps (or manual measurement), all 9 qubits collapse into classical outcomes. Outcome '0' gives Player O, and '1' gives Player X. The player with the most completed lines wins! Both players can even win simultaneously!</li>
-                </ul>
+                <span>Board</span>
+            </button>
+            <button class="mobile-tab-btn" data-tab="graph">
+                <svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="18" r="3"/>
+                    <line x1="8.5" y1="7.5" x2="15.5" y2="7.5"/>
+                    <line x1="7.5" y1="8.5" x2="10.5" y2="15.5"/>
+                    <line x1="16.5" y1="8.5" x2="13.5" y2="15.5"/>
+                </svg>
+                <span>Graph</span>
+            </button>
+            <button class="mobile-tab-btn" data-tab="history">
+                <svg class="icon icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="12 8 12 12 14 14"/><path d="M3.05 11a9 9 0 1 1 .5 4"/>
+                    <path d="M3 16v-5h5"/>
+                </svg>
+                <span>History</span>
+            </button>
+        </nav>
+
+        <!-- Main Workspace (Responsive 2-Column Desktop / Segmented Mobile) -->
+        <main class="app-main">
+            <!-- Left Column: Board & Active Game Controls -->
+            <section id="board-column" class="main-column column-board mobile-active">
+                <!-- Turn Banner -->
+                <div id="turn-banner" class="turn-banner turn-x">
+                    <div class="turn-indicator-badge">
+                        <span class="turn-player">Player X</span>
+                        <span class="turn-move">Move X<sub>1</sub></span>
+                    </div>
+                    <div class="turn-prompt">Tap <strong>Square 1 of 2</strong> to place spooky mark.</div>
+                </div>
+
+                <!-- Status Feedback -->
+                <div id="status-message" class="status-message status-normal">
+                    Select two different open squares to create a quantum superposition.
+                </div>
+
+                <!-- 3x3 Quantum Board -->
+                <div class="board-wrapper">
+                    <div id="quantum-board" class="quantum-board">
+                        <!-- 9 squares generated via JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Quick Legend -->
+                <div class="board-legend">
+                    <div class="legend-item">
+                        <span class="legend-swatch swatch-x">X<sub>k</sub></span>
+                        <span>Player X</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-swatch swatch-o">O<sub>k</sub></span>
+                        <span>Player O</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-swatch swatch-entangled">1 ↔ 2</span>
+                        <span>Entangled Pair</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-swatch swatch-collapsed">Solid</span>
+                        <span>Collapsed (Classical)</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column: Live Entanglement Graph & History -->
+            <section id="graph-column" class="main-column column-side">
+                <!-- Entanglement Network Card -->
+                <div class="card graph-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="18" r="3"/>
+                                <line x1="8.5" y1="7.5" x2="15.5" y2="7.5"/>
+                                <line x1="7.5" y1="8.5" x2="10.5" y2="15.5"/>
+                                <line x1="16.5" y1="8.5" x2="13.5" y2="15.5"/>
+                            </svg>
+                            <h2>Entanglement Network Graph</h2>
+                        </div>
+                        <span class="badge-subtle">Real-Time Topology</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="graph-container" class="graph-svg-container">
+                            <!-- SVG Rendered Dynamically -->
+                        </div>
+                        <p class="graph-caption">
+                            Nodes represent squares 1–9. Dashed lines connect entangled pairs. When a closed loop forms, a <strong>cyclic entanglement</strong> triggers mandatory collapse!
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Scoreboard & Move History Card -->
+                <div id="history-column" class="card history-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/>
+                                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
+                                <path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.45 1-1 1H7"/>
+                                <path d="M14 14.66V17c0 .55.45 1 1 1h2"/>
+                                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
+                            </svg>
+                            <h2>Classical Scores</h2>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Scoreboard Matrix -->
+                        <div class="scoreboard-matrix">
+                            <div class="score-card score-x">
+                                <span class="score-player">Player X</span>
+                                <span id="score-x" class="score-number">0</span>
+                                <span class="score-role">First Mover (Odd Moves)</span>
+                            </div>
+                            <div class="score-card score-draws">
+                                <span class="score-player">Draws</span>
+                                <span id="score-draws" class="score-number">0</span>
+                                <span class="score-role">Ties / Cat's Game</span>
+                            </div>
+                            <div class="score-card score-o">
+                                <span class="score-player">Player O</span>
+                                <span id="score-o" class="score-number">0</span>
+                                <span class="score-role">Second Mover (Even Moves)</span>
+                            </div>
+                        </div>
+
+                        <!-- Move History Feed -->
+                        <div class="history-feed-wrapper">
+                            <h3 class="feed-title">Move & Collapse Log</h3>
+                            <div id="move-log" class="move-log-container">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Cyclic Entanglement Collapse Dialog Modal -->
+        <div id="collapse-modal" class="modal-backdrop">
+            <div class="modal-dialog collapse-dialog">
+                <div class="modal-header collapse-modal-header">
+                    <div class="collapse-icon-badge">
+                        <svg class="icon icon-md" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3>Cyclic Entanglement Detected!</h3>
+                        <p class="modal-subtitle">A closed loop of spooky marks has formed on the board.</p>
+                    </div>
+                </div>
+
+                <div class="modal-body">
+                    <div class="collapse-intro">
+                        <span id="collapse-chooser" class="chooser-badge player-o">Player O</span>
+                        <span>gets to choose which configuration collapses into classical reality!</span>
+                    </div>
+                    <div id="collapse-cycle-path" class="cycle-path-display">Loop: #1 ↔ #2 ↔ #3</div>
+
+                    <!-- Two Binary Collapse Options -->
+                    <div class="collapse-options-grid">
+                        <div class="collapse-option-card">
+                            <div class="option-header">
+                                <h4>Configuration A</h4>
+                                <span class="option-tag">Direct Orientation</span>
+                            </div>
+                            <div id="collapse-opt1-details" class="option-details-list">
+                                <!-- Rendered dynamically -->
+                            </div>
+                            <button id="collapse-btn-1" class="btn btn-primary btn-block">
+                                <span>Choose Configuration A</span>
+                            </button>
+                        </div>
+
+                        <div class="collapse-option-card">
+                            <div class="option-header">
+                                <h4>Configuration B</h4>
+                                <span class="option-tag">Inverted Orientation</span>
+                            </div>
+                            <div id="collapse-opt2-details" class="option-details-list">
+                                <!-- Rendered dynamically -->
+                            </div>
+                            <button id="collapse-btn-2" class="btn btn-primary btn-block">
+                                <span>Choose Configuration B</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <!-- Rules & Education Modal -->
+        <div id="help-modal" class="modal-backdrop">
+            <div class="modal-dialog help-dialog">
+                <div class="modal-header">
+                    <div class="brand-logo">
+                        <svg class="icon icon-brand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="2.5"/>
+                            <ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(30 12 12)"/>
+                            <ellipse cx="12" cy="12" rx="9" ry="4" transform="rotate(90 12 12)"/>
+                        </svg>
+                        <h3>Rules of Quantum Tic-Tac-Toe</h3>
+                    </div>
+                    <button id="close-modal" class="btn-close" aria-label="Close dialog">
+                        <svg class="icon icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="modal-body-scroll">
+                    <p class="intro-p">
+                        Invented by physicist <strong>Dr. Allan Goff</strong> (Novatia Labs, <em>American Journal of Physics</em>, 2006), 
+                        Quantum Tic-Tac-Toe models quantum mechanics using a pure, discrete graph without requiring linear algebra.
+                    </p>
+
+                    <div class="rules-section">
+                        <h4>1. Superposition (Two Spooky Marks Per Turn)</h4>
+                        <p>
+                            Players alternate turns (Player X goes first with odd moves 1, 3, 5...; Player O plays even moves 2, 4, 6...). 
+                            Instead of placing one permanent piece, each player places <strong>two "spooky" marks</strong> in two <em>different</em> open squares 
+                            (e.g., Move 1 places X<sub>1</sub> in Square 1 and Square 5). This represents a quantum state in equal superposition.
+                        </p>
+                    </div>
+
+                    <div class="rules-section">
+                        <h4>2. Entanglement (Shared Squares)</h4>
+                        <p>
+                            Any square can hold multiple spooky marks from different turns. When a new spooky mark shares a square with a previous move, 
+                            the two moves become <strong>entangled</strong>, forming a network of quantum dependencies.
+                        </p>
+                    </div>
+
+                    <div class="rules-section">
+                        <h4>3. Cyclic Entanglement (Measurement Trigger)</h4>
+                        <p>
+                            As the board fills, moves create connections across squares. The moment a player’s move forms a <strong>closed loop (cycle)</strong> 
+                            in the entanglement network, the system reaches its critical measurement threshold. Normal play pauses and an immediate <strong>collapse</strong> is forced!
+                        </p>
+                    </div>
+
+                    <div class="rules-section">
+                        <h4>4. Opponent Chooses the Collapse</h4>
+                        <p>
+                            The player whose move <em>created</em> the cycle does not choose how it resolves. Instead, their <strong>opponent</strong> 
+                            gets to select one of the two possible classical configurations (Configuration A or Configuration B) for the loop!
+                        </p>
+                    </div>
+
+                    <div class="rules-section">
+                        <h4>5. Cascading Domino Collapse</h4>
+                        <p>
+                            Resolving the cycle forces one mark in each cycle square to solidify into a permanent classical X or O. 
+                            Any other moves entangled with those squares are forced down their dependent branches in a deterministic cascade. 
+                            Squares that collapse become permanently closed classical tiles.
+                        </p>
+                    </div>
+
+                    <div class="rules-section">
+                        <h4>6. Winning & The Subscript Tiebreaker Rule</h4>
+                        <p>
+                            A player wins by achieving <strong>3 classical marks in a row</strong> (horizontal, vertical, or diagonal). 
+                            If a collapse causes <em>both</em> players to complete 3-in-a-row simultaneously, <strong>Allan Goff's Subscript Tiebreaker Rule</strong> applies:
+                        </p>
+                        <ul>
+                            <li>Each winning line is evaluated by the <strong>maximum move subscript</strong> that created it.</li>
+                            <li>The player with the <strong>smaller maximum subscript</strong> completed their line earlier in time and is awarded <strong>1.0 point (Winner)</strong>.</li>
+                            <li>The opponent receives <strong>0.5 points</strong>.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <span>Quantum Tic-Tac-Toe • Allan Goff's Quantum Mechanics Formulation</span>
+            <span class="footer-dot">•</span>
+            <a href="https://github.com/monikaritgithub/quantun_tic_tac_toe" target="_blank" rel="noopener noreferrer" class="footer-link">
+                <svg class="icon icon-xs" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+                </svg>
+                <span>GitHub Repository</span>
+            </a>
+        </footer>
     </div>
 
-    <!-- Footer -->
-    <footer>
-        <p>Quantum Software Developer | Qiskit Quantum Simulator Engine</p>
-    </footer>
-
-    <!-- Scripts -->
+    <!-- Scripts in proper dependency order -->
     <script src="quantum-engine.js"></script>
-    <script src="circuit-visualizer.js"></script>
-    <script src="bloch-sphere.js"></script>
+    <script src="graph-visualizer.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

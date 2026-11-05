@@ -1,50 +1,60 @@
-# Quantum Tic-Tac-Toe: 9-Qubit Quantum Circuit Simulator & Web Game
+# Quantum Tic-Tac-Toe — Allan Goff's Quantum Mechanics Game
 
-An interactive, responsive quantum game based on **IBM Qiskit** architecture, featuring real-time quantum circuit visualization, an interactive Bloch sphere projector, live Monte Carlo wavefunction simulation, and strategic gameplay against a Quantum AI bot or 2-Player pass & play.
+An authentic, responsive implementation of **Allan Goff's Quantum Tic-Tac-Toe** (published in the *American Journal of Physics*, 2006). Features real-time quantum superposition, cyclic entanglement detection, interactive collapse cascades, opponent-controlled measurement, and Allan Goff's subscript tiebreaker rule.
 
-Live Demo: [https://monikaritgithub.github.io/quantun_tic_tac_toe/](https://monikaritgithub.github.io/quantun_tic_tac_toe/)
-
----
-
-## ⚛️ Quantum Mechanics & Physics Architecture
-
-Unlike classical Tic-Tac-Toe where moves are discrete and deterministic, **Quantum Tic-Tac-Toe** maps each square $i \in \{0, \dots, 8\}$ to an individual qubit $q_i$ in a unified 9-qubit quantum register:
-
-$$\begin{pmatrix} q_0 & q_1 & q_2 \\ q_3 & q_4 & q_5 \\ q_6 & q_7 & q_8 \end{pmatrix}$$
-
-### Core Quantum Features:
-1. **Superposition Initialization ($|+\rangle$):** Every round starts by applying Hadamard gates ($H$) across all 9 qubits:
-   $$H|0\rangle = |+\rangle = \frac{|0\rangle + |1\rangle}{\sqrt{2}}$$
-   Every tile starts in an unowned, neutral 50/50 probability state.
-2. **Unitary Rotations ($R_y$):**
-   - **Move 'O':** $R_y(-\pi/2)|+\rangle = |0\rangle$ (North Pole on Bloch sphere $\implies 100\%$ probability for Player O).
-   - **Move 'X':** $R_y(+\pi/2)|+\rangle = |1\rangle$ (South Pole on Bloch sphere $\implies 100\%$ probability for Player X).
-3. **Pauli-$X$ (Quantum NOT):**
-   - Flips an owned square: $X|0\rangle = |1\rangle$ and $X|1\rangle = |0\rangle$.
-   - Leaves unowned superposition invariant: $X|+\rangle = |+\rangle$.
-4. **Quantum SWAP Gate:** Exchanges state vectors between two squares:
-   $$\text{SWAP}(|\psi_i\rangle \otimes |\phi_j\rangle) = |\phi_j\rangle \otimes |\psi_i\rangle$$
-5. **Projective Measurement ($M$):** Collapses the 9-qubit joint state into classical outcomes ($|0\rangle \to \text{O}$, $|1\rangle \to \text{X}$) according to the Born rule $P(m) = |\langle m|\psi\rangle|^2$.
+Live Game URL: [https://monikaritgithub.github.io/quantun_tic_tac_toe/](https://monikaritgithub.github.io/quantun_tic_tac_toe/)
 
 ---
 
-## 🚀 Game Features
+## ⚛️ Quantum Mechanics Principles (Allan Goff Model)
 
-- **White / Light Theme:** Modern, high-contrast scientific laboratory aesthetic.
-- **Real Vector SVG Icons:** Replaced all emojis with crisp, scalable SVG icons.
-- **Live Vector Circuit Visualizer:** Automatically updates with Qiskit-style gate symbols, SWAP links, barriers, and measurement meters.
-- **Interactive Bloch Sphere:** Real-time projection displaying polar angle $\theta$, azimuthal angle $\phi$, expectation value $\langle Z \rangle$, and probabilities for any selected tile.
-- **Quantum AI Bot:** Evaluates potential winning lines, uses Pauli-X to steal opponent squares, uses SWAP to disrupt lines, and triggers measurement when it holds a statistical advantage.
-- **Real-Time Monte Carlo Predictor:** Continuous 120-shot simulation estimating the win distribution before measurement.
-- **Web Audio API Sound Effects:** Custom synthesized audio cues for gate applications, quantum collapse, and victories.
-- **Zero Heavy Dependencies:** Built in pure HTML5, CSS3, and ES6 JavaScript for fast load times and zero build configuration.
+Standard classical Tic-Tac-Toe is deterministic and complete information. **Quantum Tic-Tac-Toe** introduces fundamental concepts of quantum physics:
+
+### 1. Superposition (Two Spooky Marks Per Move)
+- Players alternate turns: Player X places odd-numbered moves ($X_1, X_3, X_5 \dots$), and Player O places even-numbered moves ($O_2, O_4, O_6 \dots$).
+- On each turn, a player marks **two different open squares** simultaneously (e.g., Move 1 places $X_1$ in Square 1 and Square 5).
+- This represents a quantum state in equal superposition: $(|\text{Sq } 1\rangle + |\text{Sq } 5\rangle)/\sqrt{2}$.
+
+### 2. Entanglement (Shared Squares)
+- Any square can contain multiple spooky marks from different turns.
+- When spooky marks share a square, they become **entangled**, forming a quantum dependency network (a multigraph where squares are vertices and moves are edges).
+
+### 3. Cyclic Entanglement (Critical Measurement Threshold)
+- As players place pairs of spooky marks, the entanglement network expands.
+- When a move completes a **closed loop (cycle)** in the graph (e.g. $1 \xrightarrow{X_1} 2 \xrightarrow{O_2} 3 \xrightarrow{X_3} 1$), the quantum system reaches its critical measurement threshold.
+- Normal gameplay pauses and an **immediate collapse (measurement)** is forced!
+
+### 4. Opponent Chooses the Collapse
+- The player who triggered the cycle **does not** choose the collapse.
+- Instead, their **opponent** gets to select between the two possible classical configurations (Configuration A vs. Configuration B), injecting deep strategic counterplay!
+
+### 5. Cascading Domino Collapse
+- Resolving the cycle forces one mark in each cycle square to solidify into a permanent classical mark ($X$ or $O$).
+- Dependent branches attached to the cycle collapse deterministically in a domino cascade.
+- Collapsed squares become permanently closed classical squares.
+
+### 6. Winning & The Subscript Tiebreaker Rule
+- A player wins by achieving 3 classical marks in a row (horizontal, vertical, or diagonal).
+- If a collapse causes *both* players to complete 3-in-a-row simultaneously, **Allan Goff's Subscript Tiebreaker** applies:
+  - Each winning line is evaluated by the **maximum move subscript** among its 3 marks.
+  - The line with the **smaller maximum subscript** was completed earlier in time: awarded **1.0 point (Winner)**.
+  - The opponent receives **0.5 points**.
 
 ---
 
-## 🛠️ GitHub Pages Deployment
+## 🎮 Game Features & Controls
 
-To enable GitHub Pages:
-1. Navigate to repository **Settings** > **Pages**.
-2. Under **Build and deployment** > **Source**, choose **Deploy from a branch**.
-3. Select branch `main` (or `gh-pages`) and directory `/ (root)`.
-4. Click **Save**. The game will be live at `https://monikaritgithub.github.io/quantun_tic_tac_toe/`.
+- **Pass & Play (2 Players) & vs Quantum AI:** Switch smoothly between local 2-player multiplayer and intelligent Quantum AI mode.
+- **Strict Turn Enforcement:** Guaranteed alternating turns; neither player can ever play multiple moves out of turn.
+- **Live Entanglement Network Graph:** Real-time SVG visualization showing active quantum edges and animated pulsating cycles.
+- **Interactive Collapse Dialog:** Clear side-by-side preview cards showing exactly how each spooky mark resolves into a classical square.
+- **Responsive Light Theme:** Designed for both smartphones (touch targets, segmented tabs) and laptops/desktops (two-column dashboard).
+- **Zero Emojis / 100% Scalable Vector SVGs:** Modern, crisp interface with real SVG icons.
+- **Web Audio API Synthesizer:** Custom procedural sound effects for selections, entanglements, cycle alarms, collapse whooshes, and victory fanfares.
+
+---
+
+## 🚀 Live Deployment
+
+The game is hosted on GitHub Pages:
+[https://monikaritgithub.github.io/quantun_tic_tac_toe/](https://monikaritgithub.github.io/quantun_tic_tac_toe/)
