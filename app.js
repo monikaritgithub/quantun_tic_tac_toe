@@ -1,7 +1,7 @@
 /**
- * Quantum Tic-Tac-Toe - Main Application Controller
- * Allan Goff's Authentic Quantum Mechanics Model
- * Responsive Web Application for Desktop & Mobile
+ * Quantum Tic-Tac-Toe — Main Application Controller
+ * Allan Goff's Authentic Quantum Mechanics Engine
+ * Modern Esports & Tabletop Gaming UI Edition
  */
 
 class SoundFX {
@@ -41,34 +41,34 @@ class SoundFX {
     }
 
     playSelect() {
-        this.playTone(520, 0.08, 'sine', 0.1);
+        this.playTone(540, 0.08, 'sine', 0.12);
     }
 
     playEntangle() {
         if (!this.enabled) return;
-        this.playTone(440, 0.12, 'sine', 0.12);
-        setTimeout(() => this.playTone(660, 0.18, 'sine', 0.12), 60);
+        this.playTone(480, 0.1, 'sine', 0.14);
+        setTimeout(() => this.playTone(720, 0.18, 'sine', 0.14), 70);
     }
 
     playCycleAlert() {
         if (!this.enabled) return;
-        this.playTone(320, 0.15, 'triangle', 0.2);
-        setTimeout(() => this.playTone(480, 0.2, 'triangle', 0.22), 120);
-        setTimeout(() => this.playTone(640, 0.3, 'sine', 0.25), 240);
+        this.playTone(320, 0.15, 'triangle', 0.22);
+        setTimeout(() => this.playTone(480, 0.2, 'triangle', 0.25), 110);
+        setTimeout(() => this.playTone(640, 0.35, 'sine', 0.28), 220);
     }
 
     playCollapse() {
         if (!this.enabled) return;
-        this.playTone(220, 0.25, 'sawtooth', 0.15);
-        setTimeout(() => this.playTone(330, 0.3, 'sine', 0.2), 100);
-        setTimeout(() => this.playTone(550, 0.4, 'sine', 0.25), 220);
+        this.playTone(200, 0.25, 'sawtooth', 0.15);
+        setTimeout(() => this.playTone(350, 0.3, 'sine', 0.22), 90);
+        setTimeout(() => this.playTone(580, 0.45, 'sine', 0.28), 200);
     }
 
     playWin() {
         if (!this.enabled) return;
-        const notes = [523.25, 659.25, 783.99, 1046.50];
+        const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51];
         notes.forEach((f, i) => {
-            setTimeout(() => this.playTone(f, 0.3, 'sine', 0.2), i * 110);
+            setTimeout(() => this.playTone(f, 0.3, 'sine', 0.22), i * 100);
         });
     }
 }
@@ -82,22 +82,20 @@ class QuantumGameApp {
 
         this.vsAI = true; // Default: Player vs Quantum AI
         this.aiThinking = false;
-
-        // Current turn's first selected square (0..8) or null
         this.firstSelectedSquare = null;
 
-        // Scores
+        // Cumulative Scores
         this.scores = {
             X: 0,
             O: 0,
             draws: 0,
-            totalGames: 0
+            totalMatches: 0
         };
 
         this.initDOM();
         this.renderAll();
 
-        // Check if user is new, offer tutorial
+        // Check if user is first-time visitor
         try {
             const hasSeen = localStorage.getItem('qt3_tutorial_seen');
             if (!hasSeen) {
@@ -112,9 +110,10 @@ class QuantumGameApp {
     }
 
     initDOM() {
-        // Mode toggle (Pass & Play vs AI)
+        // Mode toggle
         const mode2P = document.getElementById('mode-2p');
         const modeAI = document.getElementById('mode-ai');
+        const playerOName = document.getElementById('player-o-name');
 
         if (mode2P && modeAI) {
             mode2P.addEventListener('click', () => {
@@ -122,6 +121,7 @@ class QuantumGameApp {
                     this.vsAI = false;
                     mode2P.classList.add('active');
                     modeAI.classList.remove('active');
+                    if (playerOName) playerOName.textContent = 'Player O';
                     this.resetGame();
                 }
             });
@@ -130,17 +130,18 @@ class QuantumGameApp {
                     this.vsAI = true;
                     modeAI.classList.add('active');
                     mode2P.classList.remove('active');
+                    if (playerOName) playerOName.textContent = 'Quantum AI';
                     this.resetGame();
                 }
             });
         }
 
-        // Sound toggle
+        // Sound button
         const soundBtn = document.getElementById('sound-btn');
         if (soundBtn) {
             soundBtn.addEventListener('click', () => {
                 this.sound.enabled = !this.sound.enabled;
-                const label = soundBtn.querySelector('.btn-text');
+                const label = soundBtn.querySelector('.btn-label');
                 if (this.sound.enabled) {
                     soundBtn.classList.remove('muted');
                     if (label) label.textContent = 'Sound: ON';
@@ -155,7 +156,16 @@ class QuantumGameApp {
         const resetBtn = document.getElementById('reset-btn');
         if (resetBtn) resetBtn.addEventListener('click', () => this.resetGame());
 
-        // Quick Rules Modal
+        // Rematch button in victory modal
+        const rematchBtn = document.getElementById('rematch-btn');
+        if (rematchBtn) {
+            rematchBtn.addEventListener('click', () => {
+                this.hideVictoryModal();
+                this.resetGame();
+            });
+        }
+
+        // Help Modal
         const helpBtn = document.getElementById('help-btn');
         const modal = document.getElementById('help-modal');
         const closeModal = document.getElementById('close-modal');
@@ -166,7 +176,7 @@ class QuantumGameApp {
             closeModal.addEventListener('click', () => modal.classList.remove('visible'));
         }
 
-        // Segmented Mobile Tabs
+        // Mobile Segmented Tabs
         const tabBtns = document.querySelectorAll('.mobile-tab-btn');
         tabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -177,13 +187,13 @@ class QuantumGameApp {
             });
         });
 
-        // Initialize 3x3 Board Grid click listeners
+        // Initialize 3x3 Board Grid
         const boardEl = document.getElementById('quantum-board');
         if (boardEl) {
             boardEl.innerHTML = '';
             for (let i = 0; i < 9; i++) {
                 const cell = document.createElement('div');
-                cell.className = 'board-tile';
+                cell.className = 'quantum-tile';
                 cell.setAttribute('data-index', i);
                 cell.addEventListener('click', () => this.handleSquareClick(i));
                 boardEl.appendChild(cell);
@@ -198,7 +208,6 @@ class QuantumGameApp {
 
         if (!boardCol || !graphCol || !historyCol) return;
 
-        // Hide all first on mobile
         boardCol.classList.remove('mobile-active');
         graphCol.classList.remove('mobile-active');
         historyCol.classList.remove('mobile-active');
@@ -217,20 +226,21 @@ class QuantumGameApp {
         this.firstSelectedSquare = null;
         this.aiThinking = false;
         this.hideCollapseModal();
+        this.hideVictoryModal();
         this.renderAll();
-        this.addLogEntry('New game started. Player X begins.');
+        this.addLogEntry('Match initialized. Player X opens with Move X₁.');
     }
 
     handleSquareClick(sqIndex) {
         if (this.engine.isGameOver || this.aiThinking || this.engine.pendingCycle) return;
 
-        // If in vs AI mode and it's AI's turn, ignore clicks
+        // Ignore clicks if AI turn
         if (this.vsAI && this.engine.currentTurn === 'O') return;
 
-        // Check if square is already collapsed
+        // Reject if square is already classical
         if (this.engine.classical[sqIndex] !== null) {
             this.sound.playSelect();
-            this.flashStatus(`Square #${sqIndex + 1} is already collapsed! Choose an open square.`, 'warning');
+            this.flashStatus(`Square #${sqIndex + 1} is already collapsed into classical reality!`, 'warning');
             return;
         }
 
@@ -239,26 +249,20 @@ class QuantumGameApp {
             this.firstSelectedSquare = sqIndex;
             this.sound.playSelect();
             this.renderBoard();
-            this.setStatusMessage(
-                `Square #${sqIndex + 1} selected (1/2). Tap a second square to complete Move ${this.engine.currentTurn}${this.engine.moveNum}.`,
-                'active'
-            );
+            this.updateBattleHUD();
             return;
         }
 
-        // Tapping the same square deselects it
+        // Same square deselects
         if (this.firstSelectedSquare === sqIndex) {
             this.firstSelectedSquare = null;
             this.sound.playSelect();
             this.renderBoard();
-            this.setStatusMessage(
-                `Selection cancelled. Player ${this.engine.currentTurn}: Tap square 1 of 2.`,
-                'normal'
-            );
+            this.updateBattleHUD();
             return;
         }
 
-        // Second square selected: commit move!
+        // Second square selected: commit quantum move!
         const sq1 = this.firstSelectedSquare;
         const sq2 = sqIndex;
         this.firstSelectedSquare = null;
@@ -277,7 +281,6 @@ class QuantumGameApp {
         this.addLogEntry(`Move ${movePlayer}${moveId}: Entangled Squares #${sq1 + 1} and #${sq2 + 1}`);
 
         if (result.cycle) {
-            // Cyclic entanglement triggered!
             this.sound.playCycleAlert();
             this.renderAll();
             this.showCollapseModal(result.pendingCycle);
@@ -292,7 +295,7 @@ class QuantumGameApp {
 
         if (this.vsAI && this.engine.currentTurn === 'O') {
             this.aiThinking = true;
-            this.setStatusMessage(`Quantum AI is evaluating entanglement states...`, 'thinking');
+            this.updateBattleHUD();
             this.renderBoard();
 
             setTimeout(() => {
@@ -316,7 +319,7 @@ class QuantumGameApp {
                 } else {
                     this.renderAll();
                 }
-            }, 550);
+            }, 600);
         }
     }
 
@@ -334,7 +337,7 @@ class QuantumGameApp {
         const chooser = pendingCycle.chooser;
 
         if (chooserBadge) {
-            chooserBadge.textContent = `Player ${chooser}`;
+            chooserBadge.textContent = chooser === 'O' && this.vsAI ? 'QUANTUM AI' : `PLAYER ${chooser}`;
             chooserBadge.className = `chooser-badge player-${chooser.toLowerCase()}`;
         }
 
@@ -356,21 +359,30 @@ class QuantumGameApp {
         if (opt1Details) opt1Details.innerHTML = formatDetails(pendingCycle.option1.details);
         if (opt2Details) opt2Details.innerHTML = formatDetails(pendingCycle.option2.details);
 
-        // Bind buttons
-        if (opt1Btn) {
-            opt1Btn.onclick = () => this.handleCollapseChoice(1);
+        // Bind button actions
+        if (opt1Btn) opt1Btn.onclick = () => this.handleCollapseChoice(1);
+        if (opt2Btn) opt2Btn.onclick = () => this.handleCollapseChoice(2);
+
+        // Interactive hover previews on board
+        const cardA = modal.querySelector('.option-card-a');
+        const cardB = modal.querySelector('.option-card-b');
+
+        if (cardA) {
+            cardA.onmouseenter = () => this.previewCollapseAssignment(pendingCycle.option1.assignment);
+            cardA.onmouseleave = () => this.clearPreviewCollapse();
         }
-        if (opt2Btn) {
-            opt2Btn.onclick = () => this.handleCollapseChoice(2);
+        if (cardB) {
+            cardB.onmouseenter = () => this.previewCollapseAssignment(pendingCycle.option2.assignment);
+            cardB.onmouseleave = () => this.clearPreviewCollapse();
         }
 
         modal.classList.add('visible');
 
-        // If in vs AI mode and AI is the chooser:
+        // AI decision logic
         if (this.vsAI && chooser === 'O') {
             if (opt1Btn) opt1Btn.disabled = true;
             if (opt2Btn) opt2Btn.disabled = true;
-            this.setStatusMessage(`Quantum AI is selecting optimal collapse resolution...`, 'thinking');
+            this.setStatusMessage(`Quantum AI is evaluating optimal wavefunction collapse...`, 'thinking');
 
             setTimeout(() => {
                 const bestChoice = this.engine.computeBestCollapseChoice();
@@ -386,19 +398,40 @@ class QuantumGameApp {
                         opt2Btn.disabled = false;
                         opt2Btn.classList.remove('ai-highlight');
                     }
+                    this.clearPreviewCollapse();
                     this.handleCollapseChoice(bestChoice);
-                }, 400);
-            }, 650);
+                }, 450);
+            }, 750);
         } else {
             if (opt1Btn) opt1Btn.disabled = false;
             if (opt2Btn) opt2Btn.disabled = false;
-            this.setStatusMessage(`Player ${chooser}: Choose how to collapse the cyclic entanglement!`, 'active');
+            this.setStatusMessage(`Opponent Player ${chooser}: Choose how to collapse the cyclic entanglement!`, 'active');
         }
+    }
+
+    previewCollapseAssignment(assignment) {
+        const boardEl = document.getElementById('quantum-board');
+        if (!boardEl) return;
+        const tiles = boardEl.querySelectorAll('.quantum-tile');
+        for (const [mIdStr, sq] of Object.entries(assignment)) {
+            const tile = tiles[sq];
+            if (tile && !tile.classList.contains('collapsed')) {
+                tile.classList.add('preview-highlight');
+            }
+        }
+    }
+
+    clearPreviewCollapse() {
+        const boardEl = document.getElementById('quantum-board');
+        if (!boardEl) return;
+        const tiles = boardEl.querySelectorAll('.quantum-tile');
+        tiles.forEach(t => t.classList.remove('preview-highlight'));
     }
 
     hideCollapseModal() {
         const modal = document.getElementById('collapse-modal');
         if (modal) modal.classList.remove('visible');
+        this.clearPreviewCollapse();
     }
 
     handleCollapseChoice(optionIndex) {
@@ -408,7 +441,7 @@ class QuantumGameApp {
         const result = this.engine.resolveCollapse(optionIndex);
         if (!result.success) return;
 
-        this.addLogEntry(`Cycle resolved (Option ${optionIndex}). Squares collapsed into classical reality.`);
+        this.addLogEntry(`Wavefunction collapsed (State ${optionIndex === 1 ? 'A' : 'B'}). Squares solidified.`);
         this.renderAll();
 
         if (result.winStatus.isGameOver) {
@@ -420,29 +453,75 @@ class QuantumGameApp {
 
     handleGameOver(result) {
         this.sound.playWin();
-        this.scores.totalGames++;
+        this.scores.totalMatches++;
 
         if (result.winner === 'X') {
             this.scores.X += result.scores ? result.scores.X : 1;
             if (result.scores && result.scores.O) this.scores.O += result.scores.O;
-            this.setStatusMessage(`🎉 Game Over: Player X WINS! ${result.reason}`, 'win-x');
         } else if (result.winner === 'O') {
             this.scores.O += result.scores ? result.scores.O : 1;
             if (result.scores && result.scores.X) this.scores.X += result.scores.X;
-            this.setStatusMessage(`🎉 Game Over: Player O WINS! ${result.reason}`, 'win-o');
         } else {
             this.scores.draws++;
-            this.setStatusMessage(`Game Over: Draw! ${result.reason}`, 'draw');
         }
 
         this.updateScoreboard();
         this.renderBoard();
-        this.addLogEntry(`Match finished. Result: ${result.winner} (${result.reason})`);
+        this.showVictoryModal(result);
+        this.addLogEntry(`Match finished: ${result.winner} (${result.reason})`);
+    }
+
+    showVictoryModal(result) {
+        const modal = document.getElementById('victory-modal');
+        if (!modal) return;
+
+        const title = document.getElementById('victory-title');
+        const reason = document.getElementById('victory-reason');
+        const matrix = document.getElementById('victory-scores-matrix');
+
+        if (title) {
+            if (result.winner === 'X') {
+                title.textContent = 'PLAYER X WINS!';
+                title.className = 'victory-headline win-x-text';
+            } else if (result.winner === 'O') {
+                title.textContent = this.vsAI ? 'QUANTUM AI WINS!' : 'PLAYER O WINS!';
+                title.className = 'victory-headline win-o-text';
+            } else {
+                title.textContent = "MATCH DRAW (CAT'S GAME)!";
+                title.className = 'victory-headline win-draw-text';
+            }
+        }
+
+        if (reason) reason.textContent = result.reason;
+
+        if (matrix) {
+            matrix.innerHTML = `
+                <div class="score-summary-card x-summary">
+                    <span class="summary-label">Player X</span>
+                    <span class="summary-score">${Number.isInteger(this.scores.X) ? this.scores.X : this.scores.X.toFixed(1)}</span>
+                </div>
+                <div class="score-summary-card draws-summary">
+                    <span class="summary-label">Draws</span>
+                    <span class="summary-score">${this.scores.draws}</span>
+                </div>
+                <div class="score-summary-card o-summary">
+                    <span class="summary-label">${this.vsAI ? 'Quantum AI' : 'Player O'}</span>
+                    <span class="summary-score">${Number.isInteger(this.scores.O) ? this.scores.O : this.scores.O.toFixed(1)}</span>
+                </div>
+            `;
+        }
+
+        modal.classList.add('visible');
+    }
+
+    hideVictoryModal() {
+        const modal = document.getElementById('victory-modal');
+        if (modal) modal.classList.remove('visible');
     }
 
     renderAll() {
         this.renderBoard();
-        this.renderTurnStatus();
+        this.updateBattleHUD();
         this.graphViz.render(this.engine, this.engine.pendingCycle);
         this.updateScoreboard();
     }
@@ -451,99 +530,95 @@ class QuantumGameApp {
         const boardEl = document.getElementById('quantum-board');
         if (!boardEl) return;
 
-        const cells = boardEl.querySelectorAll('.board-tile');
-        cells.forEach((cell, idx) => {
+        const tiles = boardEl.querySelectorAll('.quantum-tile');
+        tiles.forEach((tile, idx) => {
             const classical = this.engine.classical[idx];
             const spookyMarks = this.engine.getSpookyMarksForSquare(idx);
             const isSelected = this.firstSelectedSquare === idx;
 
-            // Reset classes
-            cell.className = 'board-tile';
-            cell.innerHTML = '';
+            tile.className = 'quantum-tile';
+            tile.innerHTML = '';
 
-            // Square number indicator in top-left
+            // Square number indicator in corner
             const sqNum = document.createElement('span');
-            sqNum.className = 'tile-number';
+            sqNum.className = 'tile-corner-num';
             sqNum.textContent = `${idx + 1}`;
-            cell.appendChild(sqNum);
+            tile.appendChild(sqNum);
 
             if (isSelected) {
-                cell.classList.add('selected');
+                tile.classList.add('tile-selected');
             }
 
             if (classical) {
-                // Square has collapsed into classical reality!
-                cell.classList.add('collapsed');
-                cell.classList.add(classical.player === 'X' ? 'collapsed-x' : 'collapsed-o');
+                tile.classList.add('tile-collapsed');
+                tile.classList.add(classical.player === 'X' ? 'collapsed-x' : 'collapsed-o');
 
                 const markEl = document.createElement('div');
-                markEl.className = 'classical-symbol';
+                markEl.className = 'classical-token';
                 markEl.innerHTML = `
-                    <span class="symbol-char">${classical.player}</span>
-                    <span class="symbol-sub">${classical.moveId}</span>
+                    <span class="token-char">${classical.player}</span>
+                    <span class="token-sub">${classical.moveId}</span>
                 `;
-                cell.appendChild(markEl);
+                tile.appendChild(markEl);
 
-                // Highlight winning lines
+                // Highlight winning cell
                 if (this.engine.gameResult && this.engine.gameResult.winningLines) {
                     for (const line of this.engine.gameResult.winningLines) {
                         if (line.includes(idx)) {
-                            cell.classList.add('winning-cell');
+                            tile.classList.add('winning-cell-aura');
                         }
                     }
                 }
             } else {
-                // Superposition state: render spooky marks container
-                const spookyContainer = document.createElement('div');
-                spookyContainer.className = 'spooky-container';
+                const spookyBox = document.createElement('div');
+                spookyBox.className = 'tile-spooky-box';
 
                 spookyMarks.forEach(sm => {
                     const chip = document.createElement('span');
                     chip.className = `spooky-chip chip-${sm.player.toLowerCase()}`;
                     chip.innerHTML = `${sm.player}<sub>${sm.id}</sub>`;
-                    spookyContainer.appendChild(chip);
+                    spookyBox.appendChild(chip);
                 });
 
-                cell.appendChild(spookyContainer);
+                tile.appendChild(spookyBox);
             }
         });
     }
 
-    renderTurnStatus() {
-        if (this.engine.isGameOver) return;
-
+    updateBattleHUD() {
         const turn = this.engine.currentTurn;
         const moveNum = this.engine.moveNum;
-        const banner = document.getElementById('turn-banner');
+        const hudX = document.getElementById('hud-player-x');
+        const hudO = document.getElementById('hud-player-o');
+        const turnPill = document.getElementById('hud-turn-pill');
+        const bannerText = document.getElementById('turn-banner-text');
+        const actionPrompt = document.getElementById('hud-action-prompt');
 
-        if (banner) {
-            banner.className = `turn-banner turn-${turn.toLowerCase()}`;
-            const isHumanTurn = !this.vsAI || turn === 'X';
+        if (hudX && hudO) {
+            hudX.classList.toggle('active-turn', turn === 'X' && !this.engine.isGameOver);
+            hudO.classList.toggle('active-turn', turn === 'O' && !this.engine.isGameOver);
+        }
+
+        if (turnPill && bannerText && actionPrompt) {
+            if (this.engine.isGameOver) {
+                turnPill.className = 'hud-turn-pill turn-pill-gameover';
+                bannerText.textContent = 'MATCH COMPLETED';
+                actionPrompt.textContent = this.engine.gameResult ? this.engine.gameResult.reason : 'Game concluded.';
+                return;
+            }
+
+            const isAITurn = this.vsAI && turn === 'O';
+            turnPill.className = `hud-turn-pill turn-pill-${turn.toLowerCase()}`;
 
             if (this.firstSelectedSquare !== null) {
-                banner.innerHTML = `
-                    <div class="turn-indicator-badge">
-                        <span class="turn-player">Player ${turn}</span>
-                        <span class="turn-move">Move ${turn}<sub>${moveNum}</sub></span>
-                    </div>
-                    <div class="turn-prompt">Square #${this.firstSelectedSquare + 1} chosen. <strong>Tap 2nd square</strong> to entangle!</div>
-                `;
-            } else if (!isHumanTurn) {
-                banner.innerHTML = `
-                    <div class="turn-indicator-badge">
-                        <span class="turn-player">Quantum AI</span>
-                        <span class="turn-move">Move O<sub>${moveNum}</sub></span>
-                    </div>
-                    <div class="turn-prompt">Calculating quantum superposition...</div>
-                `;
+                bannerText.textContent = `PLAYER ${turn}'S TURN (MOVE ${turn}${moveNum})`;
+                actionPrompt.innerHTML = `Square <strong>#${this.firstSelectedSquare + 1}</strong> chosen. <strong>Tap 2nd square</strong> to entangle!`;
+            } else if (isAITurn) {
+                bannerText.textContent = `QUANTUM AI'S TURN (MOVE O${moveNum})`;
+                actionPrompt.textContent = `Calculating optimal superposition states...`;
             } else {
-                banner.innerHTML = `
-                    <div class="turn-indicator-badge">
-                        <span class="turn-player">Player ${turn}</span>
-                        <span class="turn-move">Move ${turn}<sub>${moveNum}</sub></span>
-                    </div>
-                    <div class="turn-prompt">Tap <strong>Square 1 of 2</strong> to place spooky mark.</div>
-                `;
+                bannerText.textContent = `PLAYER ${turn}'S TURN (MOVE ${turn}${moveNum})`;
+                actionPrompt.innerHTML = `Tap <strong>Square 1 of 2</strong> to place quantum marks.`;
             }
         }
     }
@@ -552,14 +627,14 @@ class QuantumGameApp {
         const msgEl = document.getElementById('status-message');
         if (msgEl) {
             msgEl.textContent = msg;
-            msgEl.className = `status-message status-${type}`;
+            msgEl.className = `arena-status-banner status-${type}`;
         }
     }
 
     flashStatus(msg, type = 'warning') {
         this.setStatusMessage(msg, type);
         setTimeout(() => {
-            this.renderTurnStatus();
+            this.updateBattleHUD();
         }, 1800);
     }
 
@@ -578,9 +653,9 @@ class QuantumGameApp {
         if (!logContainer) return;
 
         const entry = document.createElement('div');
-        entry.className = 'log-entry';
+        entry.className = 'telemetry-entry';
         const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        entry.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-text">${text}</span>`;
+        entry.innerHTML = `<span class="entry-time">[${time}]</span> <span class="entry-text">${text}</span>`;
         logContainer.prepend(entry);
     }
 }
