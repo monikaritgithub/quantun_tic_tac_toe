@@ -179,7 +179,6 @@ class QuantumTicTacToeEngine {
             for (const e of activeMoves) {
                 if (assignment[e.id] !== undefined) continue;
 
-                // If e touches currSq, it cannot occupy currSq because currSq is already occupied!
                 if (e.sq1 === currSq || e.sq2 === currSq) {
                     const otherSq = e.sq1 === currSq ? e.sq2 : e.sq1;
                     assignment[e.id] = otherSq;
@@ -294,8 +293,7 @@ class QuantumTicTacToeEngine {
                 reason: 'Player O completed 3-in-a-row!'
             };
         } else if (winsX.length > 0 && winsO.length > 0) {
-            // Simultaneous win! Apply Goff's subscript tiebreaker:
-            // Whichever player achieved their line earlier in time (lower maximum subscript) wins!
+            // Simultaneous win: compare maximum subscript of earliest completed line
             const bestX = Math.min(...winsX.map(w => w.maxSub));
             const bestO = Math.min(...winsO.map(w => w.maxSub));
 
@@ -305,7 +303,7 @@ class QuantumTicTacToeEngine {
                     winner: 'X',
                     scores: { X: 1.0, O: 0.5 },
                     winningLines: winsX.map(w => w.line),
-                    reason: `Simultaneous win! Player X completed line earlier (subscript ${bestX} vs ${bestO}).`
+                    reason: `Simultaneous win! Player X achieved line earlier (Move ${bestX} vs Move ${bestO}).`
                 };
             } else if (bestO < bestX) {
                 return {
@@ -313,7 +311,7 @@ class QuantumTicTacToeEngine {
                     winner: 'O',
                     scores: { O: 1.0, X: 0.5 },
                     winningLines: winsO.map(w => w.line),
-                    reason: `Simultaneous win! Player O completed line earlier (subscript ${bestO} vs ${bestX}).`
+                    reason: `Simultaneous win! Player O achieved line earlier (Move ${bestO} vs Move ${bestX}).`
                 };
             } else {
                 return {
@@ -332,7 +330,7 @@ class QuantumTicTacToeEngine {
                 isGameOver: true,
                 winner: 'Draw',
                 winningLines: [],
-                reason: 'All squares collapsed without a 3-in-a-row.'
+                reason: "All 9 squares collapsed without a 3-in-a-row (Cat's Game)."
             };
         }
 
@@ -344,6 +342,7 @@ class QuantumTicTacToeEngine {
 
     /**
      * Strategic AI Engine for Player O (or X)
+     * Upgraded with smart cycle aversion, fork creation, and defense heuristics.
      */
     computeBestAIMove() {
         const open = this.getOpenSquares();
@@ -351,17 +350,15 @@ class QuantumTicTacToeEngine {
 
         const player = this.currentTurn;
         const opponent = player === 'X' ? 'O' : 'X';
+        const active = this.getActiveMoves();
 
-        // 1. Check if completing any cycle allows AI to win immediately
+        // 1. Check if completing any cycle guarantees AI a win regardless of opponent choice
         for (let i = 0; i < open.length; i++) {
             for (let j = i + 1; j < open.length; j++) {
                 const sq1 = open[i];
                 const sq2 = open[j];
-                const active = this.getActiveMoves();
                 const path = this.findPath(sq1, sq2, new Set(), active);
                 if (path !== null) {
-                    // This creates a cycle. Note: Opponent will choose collapse!
-                    // So we must check if BOTH collapse options are favorable or at least one is safe.
                     const cycleVertices = path.map(p => p.sq);
                     const dummyMove = { id: this.moveNum, player, sq1, sq2, collapsedTo: null };
                     const cycleEdges = path.slice(0, -1).map(p => p.edge).concat([dummyMove]);
@@ -372,7 +369,6 @@ class QuantumTicTacToeEngine {
                     const sim1 = this.simulateCollapse(opt1.assignment);
                     const sim2 = this.simulateCollapse(opt2.assignment);
 
-                    // If both options give AI a win, this is an unstoppable win!
                     if (sim1.winner === player && sim2.winner === player) {
                         return { sq1, sq2, reason: 'Forced collapse winning fork' };
                     }
@@ -380,13 +376,12 @@ class QuantumTicTacToeEngine {
             }
         }
 
-        // 2. Score candidate pairs based on positional strength
-        // Squares sorted by strategic classical value: Center (4) > Corners (0,2,6,8) > Edges (1,3,5,7)
-        const squareWeights = [3, 2, 3, 2, 5, 2, 3, 2, 3];
+        // 2. Score candidate moves strategically
+        // Center (4) has highest strategic value, corners next, then edges
+        const squareWeights = [4, 2, 4, 2, 6, 2, 4, 2, 4];
         let bestPair = null;
-        let bestScore = -9999;
+        let bestScore = -99999;
 
-        // Shuffle open squares slightly to avoid deterministic repetitive openings
         const candidates = [];
         for (let i = 0; i < open.length; i++) {
             for (let j = i + 1; j < open.length; j++) {
@@ -398,23 +393,19 @@ class QuantumTicTacToeEngine {
         for (const [sq1, sq2] of candidates) {
             let score = squareWeights[sq1] + squareWeights[sq2];
 
-            // Bonus if squares share a winning line
-            for (const line of QuantumTicTacToeEngine.WINNING_LINES) {
-                if (line.includes(sq1) && line.includes(sq2)) {
-                    score += 4;
-                    // Extra bonus if third square has our marks or is empty
-                    const third = line.find(s => s !== sq1 && s !== sq2);
-                    if (this.classical[third] && this.classical[third].player === player) {
-                        score += 6;
-                    }
-                }
+            // HEURISTIC A: Strongly penalize placing marks on the exact same two squares as an existing active move!
+            // (Prevents pointless duplicate cycles unless strategically winning)
+            const duplicateActiveMove = active.find(m => 
+                (m.sq1 === sq1 && m.sq2 === sq2) || (m.sq1 === sq2 && m.sq2 === sq1)
+            );
+            if (duplicateActiveMove) {
+                score -= 80; // Heavy penalty for redundant duplicate cycle
             }
 
-            // Penalty if this move gives opponent a cycle that guarantees them a win
-            const active = this.getActiveMoves();
+            // HEURISTIC B: Check cycle creation
             const path = this.findPath(sq1, sq2, new Set(), active);
             if (path !== null) {
-                // If creating a cycle, opponent chooses! If opponent can win, heavily penalize!
+                // If this creates a cycle, opponent chooses!
                 const cycleVertices = path.map(p => p.sq);
                 const dummyMove = { id: this.moveNum, player, sq1, sq2, collapsedTo: null };
                 const cycleEdges = path.slice(0, -1).map(p => p.edge).concat([dummyMove]);
@@ -423,10 +414,34 @@ class QuantumTicTacToeEngine {
                 const sim1 = this.simulateCollapse(opt1.assignment);
                 const sim2 = this.simulateCollapse(opt2.assignment);
 
+                // If opponent can choose an outcome that makes them win, DO NOT DO THIS MOVE!
                 if (sim1.winner === opponent || sim2.winner === opponent) {
-                    score -= 50; // Dangerous cycle
+                    score -= 150; // Critical danger: gives opponent instant win
                 } else if (sim1.winner === player || sim2.winner === player) {
-                    score += 15;
+                    score += 25; // Good opportunity
+                } else {
+                    // Slight penalty for creating a cycle when AI has no advantage
+                    score -= 10;
+                }
+            }
+
+            // HEURISTIC C: Synergy along winning lines
+            for (const line of QuantumTicTacToeEngine.WINNING_LINES) {
+                const countMine = line.filter(s => this.classical[s] && this.classical[s].player === player).length;
+                const countOpp = line.filter(s => this.classical[s] && this.classical[s].player === opponent).length;
+
+                // If line contains both sq1 and sq2
+                if (line.includes(sq1) && line.includes(sq2)) {
+                    if (countOpp === 0) score += 12; // Uncontested line
+                    if (countMine === 1) score += 20; // Working towards 3-in-a-row
+                }
+
+                // Defensive block: if opponent owns 2 in this line, play into the third!
+                if (countOpp === 2 && countMine === 0) {
+                    const blockSq = line.find(s => this.classical[s] === null);
+                    if (blockSq === sq1 || blockSq === sq2) {
+                        score += 35; // Crucial block
+                    }
                 }
             }
 
@@ -459,10 +474,20 @@ class QuantumTicTacToeEngine {
         if (sim1.winner === opponent && sim2.winner !== opponent) return 2;
         if (sim2.winner === opponent && sim1.winner !== opponent) return 1;
 
-        // Priority 3: Count classical lines or squares owned by AI
-        const countOwned = (sim) => sim.classical.filter(c => c && c.player === player).length;
-        if (countOwned(sim1) >= countOwned(sim2)) return 1;
-        return 2;
+        // Priority 3: Count classical lines or strategic center/corners owned by AI
+        const evalBoard = (sim) => {
+            let val = 0;
+            const weights = [3, 2, 3, 2, 5, 2, 3, 2, 3];
+            for (let i = 0; i < 9; i++) {
+                if (sim.classical[i]) {
+                    if (sim.classical[i].player === player) val += weights[i];
+                    else val -= weights[i];
+                }
+            }
+            return val;
+        };
+
+        return evalBoard(sim1) >= evalBoard(sim2) ? 1 : 2;
     }
 
     /**

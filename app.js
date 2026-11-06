@@ -328,6 +328,7 @@ class QuantumGameApp {
         if (!modal) return;
 
         const chooserBadge = document.getElementById('collapse-chooser');
+        const narrativeText = document.getElementById('collapse-narrative-text');
         const cyclePathSpan = document.getElementById('collapse-cycle-path');
         const opt1Details = document.getElementById('collapse-opt1-details');
         const opt2Details = document.getElementById('collapse-opt2-details');
@@ -335,35 +336,88 @@ class QuantumGameApp {
         const opt2Btn = document.getElementById('collapse-btn-2');
 
         const chooser = pendingCycle.chooser;
+        const isAIChooser = chooser === 'O' && this.vsAI;
 
         if (chooserBadge) {
-            chooserBadge.textContent = chooser === 'O' && this.vsAI ? 'QUANTUM AI' : `PLAYER ${chooser}`;
+            chooserBadge.textContent = isAIChooser ? 'QUANTUM AI (OBSERVER)' : `PLAYER ${chooser} (DEFENDER)`;
             chooserBadge.className = `chooser-badge player-${chooser.toLowerCase()}`;
         }
 
-        if (cyclePathSpan) {
-            const pathStr = pendingCycle.cycleVertices.map(v => `#${v + 1}`).join(' ↔ ');
-            cyclePathSpan.textContent = `Loop: ${pathStr}`;
+        if (narrativeText) {
+            if (isAIChooser) {
+                narrativeText.textContent = 'Opponent closed an entanglement loop! Quantum AI holds observer privilege and is selecting the measurement basis...';
+            } else {
+                narrativeText.textContent = 'Opponent closed an entanglement loop! You command the observer basis. Tap a tactical state below to collapse reality:';
+            }
         }
 
-        const formatDetails = (details) => {
-            return details.map(d => `
-                <div class="collapse-item">
-                    <span class="collapse-mark mark-${d.player.toLowerCase()}">${d.player}<sub>${d.moveId}</sub></span>
-                    <span class="collapse-arrow">→</span>
-                    <span class="collapse-dest">Square #${d.square + 1}</span>
+        if (cyclePathSpan) {
+            const pathStr = pendingCycle.cycleVertices.map(v => `#${v + 1}`).join(' ⟷ ');
+            cyclePathSpan.textContent = pathStr;
+        }
+
+        // Mini 3x3 Arena Board Preview Generator
+        const renderMiniBoardPreview = (option) => {
+            const assignment = option.assignment; // { [moveId]: sq }
+            const details = option.details; // [ { moveId, player, square } ]
+
+            const newAtSq = {};
+            for (const d of details) {
+                newAtSq[d.square] = d;
+            }
+
+            let cellsHtml = '';
+            for (let sq = 0; sq < 9; sq++) {
+                const existing = this.engine.classical[sq];
+                if (existing) {
+                    cellsHtml += `
+                        <div class="mini-cell mini-solid mini-${existing.player.toLowerCase()}">
+                            <span class="mini-coord">${sq + 1}</span>
+                            <span class="mini-token">${existing.player}<sub>${existing.moveId}</sub></span>
+                        </div>`;
+                } else if (newAtSq[sq]) {
+                    const d = newAtSq[sq];
+                    cellsHtml += `
+                        <div class="mini-cell mini-collapsing mini-${d.player.toLowerCase()}">
+                            <span class="mini-coord">${sq + 1}</span>
+                            <span class="mini-token">${d.player}<sub>${d.moveId}</sub></span>
+                        </div>`;
+                } else {
+                    cellsHtml += `
+                        <div class="mini-cell mini-empty">
+                            <span class="mini-coord">${sq + 1}</span>
+                        </div>`;
+                }
+            }
+
+            const chipsHtml = details.map(d => `
+                <div class="tactical-item-chip chip-${d.player.toLowerCase()}">
+                    <span class="chip-token">${d.player}<sub>${d.moveId}</sub></span>
+                    <span class="chip-arrow">➔</span>
+                    <span class="chip-target">Square #${d.square + 1}</span>
                 </div>
             `).join('');
+
+            return `
+                <div class="mini-tactical-board-wrap">
+                    <div class="mini-tactical-board">
+                        ${cellsHtml}
+                    </div>
+                </div>
+                <div class="mini-tactical-chips">
+                    ${chipsHtml}
+                </div>
+            `;
         };
 
-        if (opt1Details) opt1Details.innerHTML = formatDetails(pendingCycle.option1.details);
-        if (opt2Details) opt2Details.innerHTML = formatDetails(pendingCycle.option2.details);
+        if (opt1Details) opt1Details.innerHTML = renderMiniBoardPreview(pendingCycle.option1);
+        if (opt2Details) opt2Details.innerHTML = renderMiniBoardPreview(pendingCycle.option2);
 
         // Bind button actions
         if (opt1Btn) opt1Btn.onclick = () => this.handleCollapseChoice(1);
         if (opt2Btn) opt2Btn.onclick = () => this.handleCollapseChoice(2);
 
-        // Interactive hover previews on board
+        // Interactive hover previews on main board
         const cardA = modal.querySelector('.option-card-a');
         const cardB = modal.querySelector('.option-card-b');
 
@@ -379,10 +433,10 @@ class QuantumGameApp {
         modal.classList.add('visible');
 
         // AI decision logic
-        if (this.vsAI && chooser === 'O') {
+        if (isAIChooser) {
             if (opt1Btn) opt1Btn.disabled = true;
             if (opt2Btn) opt2Btn.disabled = true;
-            this.setStatusMessage(`Quantum AI is evaluating optimal wavefunction collapse...`, 'thinking');
+            this.setStatusMessage('Quantum AI is evaluating optimal wavefunction collapse...', 'thinking');
 
             setTimeout(() => {
                 const bestChoice = this.engine.computeBestCollapseChoice();
@@ -405,7 +459,7 @@ class QuantumGameApp {
         } else {
             if (opt1Btn) opt1Btn.disabled = false;
             if (opt2Btn) opt2Btn.disabled = false;
-            this.setStatusMessage(`Opponent Player ${chooser}: Choose how to collapse the cyclic entanglement!`, 'active');
+            this.setStatusMessage(`Defender Player ${chooser}: Choose how to collapse the cyclic entanglement!`, 'active');
         }
     }
 
